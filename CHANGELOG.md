@@ -2,7 +2,7 @@
 
 Versions follow [semantic versioning](https://semver.org). Each version's section here becomes its release notes.
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-14)
 
 - First release: an installer for Windows and Linux. It finds the game (Steam, or the folder it runs from), adds
   interface layouts for common screen sizes the game doesn't ship (ultrawide 21:9 and 32:9, 1440p, 4K, 16:10 and
