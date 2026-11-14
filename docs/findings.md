@@ -44,4 +44,19 @@ tested in the running game yet.
 `UIData_1720_720.dat`, built from 1360x768 (the closest height group). The risk: 720 px is 48 px shorter than any
 768-high design, so the bottom panels may overlap things placed from the top.
 
+Tested 2026-11-14 on Linux (Proton), Direct3D 9, windowed, with `PixWidth`/`PixHeight` set to 1720x720 in
+`MajXPrefs`:
+
+- **The game loads it.** It runs at 1720x720, and in a game the top bar, the bottom bar (orders, Spells, Options)
+  and the map view stretch to the full width. The left panel stays at the left.
+- **The left panel may be too tall for 720 px.** Under the selected building's preview, a second preview is cut off
+  at the bottom edge. Still to compare with the real 1360x768 layout.
+- **The main menu** is the game's fixed-size picture in the middle, on the tiled portrait background. That's how the
+  game draws it at every size.
+- **The settings menu lists display modes, not layouts.** The list shows the modes the system reports (1920x800,
+  2560x1080, 3440x1440...), in green when a `UIData` file exists for that size and in red when not. 1720x720 isn't
+  listed, since it's not a display mode, but setting it in `MajXPrefs` works. So a `UIData_3440_1440.dat` should turn
+  3440x1440 green, and a smaller size than the screen needs something to provide the display mode and scale it up
+  (cnc-ddraw, Proton's fullscreen scaling, gamescope).
+
 [steam]: https://store.steampowered.com/app/73230/
