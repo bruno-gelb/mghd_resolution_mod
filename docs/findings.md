@@ -49,8 +49,12 @@ Tested 2026-11-14 on Linux (Proton), Direct3D 9, windowed, with `PixWidth`/`PixH
 
 - **The game loads it.** It runs at 1720x720, and in a game the top bar, the bottom bar (orders, Spells, Options)
   and the map view stretch to the full width. The left panel stays at the left.
-- **The left panel may be too tall for 720 px.** Under the selected building's preview, a second preview is cut off
-  at the bottom edge. Still to compare with the real 1360x768 layout.
+- **The left panel is too tall for 720 px.** It stacks two building previews (a picture and a row of 7 icon
+  buttons each) at fixed positions: slot 1 at y 428-601, slot 2 at y 601-768. The 768 and 900 layouts both show two,
+  with empty panel under them at 900, so the count comes from the file, not from the screen height. At 720 slot 2 is
+  cut off. Its 15 rectangles sit together in the file (`0x2a00`-`0x2f4c` in the 40,016-byte files), and
+  `uidata_gen.py` moves them 1000 px down, off the screen, when the height is under 768. Tested: one preview, the
+  panel background under it, nothing cut off, no errors.
 - **The main menu** is the game's fixed-size picture in the middle, on the tiled portrait background. That's how the
   game draws it at every size.
 - **The settings menu lists display modes, not layouts.** The list shows the modes the system reports (1920x800,

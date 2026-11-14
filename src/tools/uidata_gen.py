@@ -25,6 +25,15 @@ FORWARD = {
 }
 
 
+# The left panel stacks two building previews at fixed positions: slot 1 at y 428-601, slot 2 at y 601-768, the
+# same in the 768 and 900 layouts. Below 768 px slot 2 is cut off, so it goes below the screen instead. These are
+# the offsets of the y words of slot 2's 15 rectangles (frame, picture, borders, icon row) in the 40,016-byte files.
+SLOT2_Y = [0x2A00, 0x2A44, 0x2A98, 0x2B18, 0x2B6C, 0x2BD8, 0x2C34, 0x2C88, 0x2CDC,
+           0x2D38, 0x2DA4, 0x2E10, 0x2E7C, 0x2EE8, 0x2F4C]
+SLOT2_BOTTOM = 768
+OFFSCREEN = 1000
+
+
 def main():
     data_dir, W, H, out = Path(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), Path(sys.argv[4])
     base = (int(sys.argv[5]), int(sys.argv[6])) if len(sys.argv) > 6 else (1360, 768)
@@ -43,6 +52,10 @@ def main():
         k = FORWARD[c[0]](words[base][i], *base)
         new[i] = INVERSE[c[0]](k, W, H)
         changed += 1
+    if H < SLOT2_BOTTOM:
+        for off in SLOT2_Y:
+            new[off // 4] += OFFSCREEN
+        print(f"height {H} < {SLOT2_BOTTOM}: second preview slot moved off-screen")
     out.write_bytes(struct.pack(f"<{n}i", *new))
     print(f"wrote {out} from {base}: {changed} words re-anchored")
 
