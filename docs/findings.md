@@ -157,3 +157,24 @@ game's process, as in the Tzar mod, or `winedbg`), and catch the function that d
 where the loader returns to the game. A wait for a key or a click (or a minimum display time) goes at that point. The
 fallback, a viewer for the `pre_load` pictures from the player's own copy, needs the image format of the `.cam`
 archives (`CYLBPC` chunks: `PALT`, `IMAG`, `TILE`, `FONT`).
+
+## The version on the main menu (issue #3)
+
+Tested 2026-11-14: the main menu shows `mghd-resolution-mod 0.0.1. game Version 1.5.2.24`. The code is
+`src/mghd_resolution_mod/textdata.py`.
+
+- **The text archives** (`Data/textdata.cam`, `DataMX/mx_textdata.cam`) are `CYLBPC` files: a header with one entry per
+  section (`SMNU`, screen layouts; `STRT`, string tables) and the offset of its table; each table lists its chunks (a
+  tag, 16 zero bytes, offset, size, 28 bytes per chunk); the chunks follow back to back. A string table chunk is a
+  16-bit count, a 16-bit number, one 32-bit offset per string, then the strings: a 32-bit ID, the text, a NUL. No
+  checksums: a longer string only moves the later strings in its chunk and every later chunk.
+- **The line** is `Version %s`, ID 0x56 in the general string table `GMTX`, formatted with the exe's version at
+  `0x478824` (its only use) and shown in place of `Version #`, ID 10 in the main menu's own table `AP29`, which is only
+  a placeholder. Labelling `Version #` changes nothing on screen. Both archives have the line, so both get the label.
+- **The box** is 183 px wide at x 162, made for the game's line: longer text wraps at the spaces, and the lines below
+  aren't drawn, so at first only `mghd-resolution-mod` showed. It's a rectangle record (-1, 0, 2, 162, 498, 183, 21)
+  in the main menu's layout, which is in every `UIData` file except 800x600 and in both text archives. Widened
+  differently in both, the game used the layout's. The mod makes it 469 px wide, around the same center, everywhere.
+- **The font has no `_`**: it draws the repo name's underscores as hyphens, so the label says `mghd-resolution-mod`.
+- Removing the label and narrowing the box gives back the original files byte for byte. Still to do, in the installer:
+  the 13 original layouts (only the generated ones and the text archives are done so far), backups, and uninstall.

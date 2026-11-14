@@ -19,3 +19,10 @@ dev = [
     "capstone==5.0.9",      # src/tools: disassembly
     "pefile==2024.8.26",    # src/tools: reading the exe
 ]
+
+[build-system]
+requires = ["uv_build==0.13.6"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "mghd_resolution_mod"
