@@ -84,7 +84,7 @@ def game_dir(tmp_path: Path) -> Path:
 
 
 def snapshot(root: Path) -> dict[str, bytes]:
-    return {str(p.relative_to(root)): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
+    return {p.relative_to(root).as_posix(): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
 
 
 @pytest.fixture(autouse=True)
