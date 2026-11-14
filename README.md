@@ -15,37 +15,19 @@ the game's own files, on your computer.
 
 ## Install
 
-You need [Majesty Gold HD][steam] on Steam. Tested on Linux (Proton); Windows should work the same way, but hasn't
-been tested yet ([#6](https://github.com/bruno-gelb/mghd_resolution_mod/issues/6)). GOG isn't supported yet
-([#4](https://github.com/bruno-gelb/mghd_resolution_mod/issues/4)).
+You need [Majesty Gold HD][steam] on Steam.
 
-1. Quit the game.
-2. Download the program from the latest release:
-   - Windows: [mghd-resolution-mod-windows.exe][windows]. Double-click it.
-   - Linux: [mghd-resolution-mod-linux][linux]. Make it executable and run it in a terminal:
+- [Windows + Steam](docs/windows/install-steam.md)
+- [Linux + Steam](docs/linux/install-steam.md)
 
-     ```bash
-     chmod +x mghd-resolution-mod-linux && ./mghd-resolution-mod-linux
-     ```
-
-3. It finds the game, says what it will do and asks first. It takes a minute or two: it makes layouts for common
-   screen sizes (ultrawide 21:9 and 32:9, 1440p, 4K, 16:10 and more) and for your own screens.
-4. Start the game, open **ADJUST SETTINGS** on the main menu and pick your resolution: the ones with a layout are
-   green. The main menu shows the mod's version under the picture.
-
-**Big screens, small text.** The game's interface doesn't scale, so at 3440x1440 or 4K the text gets small. For
-bigger text, pick a lower resolution of your screen's shape, like 2560x1080 on a 3440x1440 screen: the graphics card
-scales it up. Plain scaling makes the fonts blurry; a sharpening scaler fixes that: on Linux, [gamescope] with FSR
-(`gamescope -w 2560 -h 1080 -W 3440 -H 1440 -S fit -F fsr -f -- %command%` in the game's Steam launch options), on
-Windows the graphics driver's (NVIDIA Image Scaling, AMD RSR; not tested yet).
-
-For a size that isn't in the list, like 1720x720 for 2x scaling: `--size 1720x720`.
+The GOG version isn't supported yet ([#4](https://github.com/bruno-gelb/mghd_resolution_mod/issues/4)).
 
 ## Uninstall
 
-Run the program again and choose to remove the mod: it deletes the layouts it added and puts back the original
-files it changed, byte for byte. Or have Steam put the game's files back (Properties, Installed Files, Verify
-integrity of game files), then delete the `mghd-resolution-mod-backup` folder in the game folder.
+Run the program again and choose to remove the mod, or let Steam put the game's files back:
+
+- [Windows + Steam](docs/windows/uninstall-steam.md)
+- [Linux + Steam](docs/linux/uninstall-steam.md)
 
 ## Principles
 
@@ -84,8 +66,5 @@ PyInstaller's bootloader, each under its own license: `--licenses` shows them, a
   the originals back.
 
 [steam]: https://store.steampowered.com/app/73230/
-[windows]: https://github.com/bruno-gelb/mghd_resolution_mod/releases/latest/download/mghd-resolution-mod-windows.exe
-[linux]: https://github.com/bruno-gelb/mghd_resolution_mod/releases/latest/download/mghd-resolution-mod-linux
-[gamescope]: https://github.com/ValveSoftware/gamescope
 [cyberlore]: https://en.wikipedia.org/wiki/Cyberlore_Studios
 [paradox]: https://www.paradoxinteractive.com/
