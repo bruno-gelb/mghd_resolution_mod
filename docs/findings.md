@@ -39,6 +39,53 @@ tested in the running game yet.
   a base: it re-anchors the words that follow a rule and keeps the rest. Check: building 1600x900 from 1440x900 misses
   the real file by only 3 bytes, the ±1 px nudges.
 
+## Layout families
+
+The 13 files come in families: files of the same size share the same records, with different numbers.
+
+| File size | Layouts | Left panel |
+|---|---|---|
+| 11,147 | 800x600 | |
+| 24,145 | 1024x768 | |
+| 40,008 | 1280x800 | |
+| 40,016 | 1280x768, 1360x768, 1440x900, 1600x900 | two building previews from y 428 |
+| 40,100 | 1920x1080 | an extra box at y 428, two previews from y 676 |
+| 41,456 | 1280x960 | |
+| 47,136 | 1280x1024, 1680x1050 | an extra box at y 428, two previews from y 676 |
+| 48,668 | 1600x1200, 1920x1200 | an extra box at y 428, three previews from y 674 |
+
+The families share most of their structure too, so the files can be aligned word by word with `difflib`: 1600x900
+against 1600x1200 matches 9,877 words exactly. The taller files add records: the header's table of contents grows
+by 28 words, and the 1200 family inserts 2,114 words (the third preview and some sub-panels in their own local
+coordinates). In the aligned part, 25 values move by exactly the height difference (bottom anchors), 2 by half of it,
+and the preview slots by about 247 px, a redesign. The designers park unused elements at x=1000, y=1000.
+
+The top-bar title banner (395 px wide, at `0x15d4` in the 40,016-byte files) is centered over the map area: at
+`W/2 - 113` in that family, `W/2 - 116` in the 1200 family, and `W/2 - 123` in 1280x768, an odd one. Each family was
+tuned on its own.
+
+### The generator
+
+`src/tools/uidata_gen.py` builds a layout for any size:
+
+- **The base** is a layout with a family (so there's something to learn its rules from), with the closest height at or
+  below the target, then the closest width: the 1200 family for 1440 and 2160, the 1050 family for 1080, the 900
+  family for 960. Below 768 it takes the 768 family and parks the second preview slot off the screen.
+- **The rules**: the base is aligned with each of the other 12 originals, and each value that moves is matched against
+  the size difference: right (`dW`), bottom (`dH`), horizontal or vertical center (half). The base's own family decides
+  first, by majority. A value that stays put between family members of different widths isn't width-anchored, and the
+  same for height. Otherwise all comparisons must agree. Values that fit no rule were placed by hand, and keep the
+  base's value.
+- **Checked** by rebuilding each original from a sibling with the original hidden: the 768, 900 and 1200 families come
+  out within 3 px, except where hiding a file leaves a family too small to vote.
+- **Generated layouts aren't learned from**: only the 13 original sizes are read.
+
+Generated on 2026-11-14: 3440x1440, 2560x1440 and 3840x2160 from 1920x1200, 2560x1080 from 1680x1050, 2294x960 from
+1600x900, 1720x720 from 1360x768. None of them pushes off the screen anything the base kept on it, except 1720x720,
+which is shorter than its base: besides the parked slot, a bar under the left panel, a small button at (202, 729) and
+four boxes around y 600 in the middle of the screen, probably parts of dialogs, don't fit. Not tested in the game yet,
+except 1720x720 (an earlier version of it, below).
+
 ## First test file
 
 `UIData_1720_720.dat`, built from 1360x768 (the closest height group). The risk: 720 px is 48 px shorter than any

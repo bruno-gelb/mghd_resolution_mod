@@ -12,9 +12,10 @@ big and sharp, where native 3440x1440 would make them tiny.
 
 What it takes so far:
 
-- **Re-anchoring.** Files of the same size have the same structure. Comparing them shows which coordinates follow the
-  right or bottom edge, or the center, and those get recomputed for the new size. The rest were tuned by hand per
-  screen height, and come from the original file with the closest height.
+- **Re-anchoring.** The game's layouts share most of their structure, so they can be aligned value by value. Comparing
+  them shows which coordinates follow the right or bottom edge, or the center, and those get recomputed for the new
+  size. The rest were tuned by hand per screen height, and come from the base: the original with the closest height at
+  or below the target, so the new layout has everything the designers made for that height, plus room.
 - **Fixes for heights the game never had.** Below 768 px, the left panel's second building preview doesn't fit, so
   it's moved off the screen.
 
@@ -54,7 +55,8 @@ the pull request, with screenshots.
   uv run python src/tools/uidata_diff.py "<game folder>/Data" 40016
   ```
 
-- `uidata_gen.py`: builds a new `UIData` file from a base one (1360x768 by default).
+- `uidata_gen.py`: builds a new `UIData` file for any size, picking the base itself (or pass one). It learns only
+  from the 13 original sizes, so generated files in `Data/` don't matter. About 10 seconds per layout.
 - `xref.py`: static analysis of the exe, with [pefile](https://github.com/erocarrera/pefile) and
   [Capstone](https://www.capstone-engine.org/). `str` finds a string and disassembles around the code that
   references it, `dis` disassembles from an address. It only disassembles small windows, so it fits in memory on
