@@ -35,9 +35,9 @@ tested in the running game (below).
   - 61 values that depend only on the height: both 768-high files share one set and both 900-high files another
     (X positions like 1119 → 1237, sizes like 119 → 126, 1-pixel nudges). The designers seem to have made one layout
     per height, then moved the right and bottom anchors for each width.
-- `src/tools/uidata_diff.py` lists and classifies the differing words. `src/tools/uidata_gen.py` builds a new file from
-  a base: it re-anchors the words that follow a rule and keeps the rest. Check: building 1600x900 from 1440x900 misses
-  the real file by only 3 bytes, the ±1 px nudges.
+- `src/tools/uidata_diff.py` lists and classifies the differing words. `src/mghd_resolution_mod/layouts.py` builds a
+  new file from a base: it re-anchors the words that follow a rule and keeps the rest. Check: building 1600x900 from
+  1440x900 misses the real file by only 3 bytes, the ±1 px nudges.
 
 ## Layout families
 
@@ -66,7 +66,7 @@ tuned on its own.
 
 ### The generator
 
-`src/tools/uidata_gen.py` builds a layout for any size:
+`src/mghd_resolution_mod/layouts.py` (formerly `src/tools/uidata_gen.py`) builds a layout for any size:
 
 - **The base** is a layout with a family (so there's something to learn its rules from), with the closest height at or
   below the target, then the closest width: the 1200 family for 1440 and 2160, the 1050 family for 1080, the 900
@@ -100,7 +100,7 @@ Tested 2026-11-14 on Linux (Proton), Direct3D 9, windowed, with `PixWidth`/`PixH
   buttons each) at fixed positions: slot 1 at y 428-601, slot 2 at y 601-768. The 768 and 900 layouts both show two,
   with empty panel under them at 900, so the count comes from the file, not from the screen height. At 720 slot 2 is
   cut off. Its 15 rectangles sit together in the file (`0x2a00`-`0x2f4c` in the 40,016-byte files), and
-  `uidata_gen.py` moves them 1000 px down, off the screen, when the height is under 768. Tested: one preview, the
+  `layouts.py` moves them 1000 px down, off the screen, when the height is under 768. Tested: one preview, the
   panel background under it, nothing cut off, no errors.
 - **The main menu** is the game's fixed-size picture in the middle, on the tiled portrait background. That's how the
   game draws it at every size.
@@ -117,7 +117,7 @@ Tested 2026-11-14 on Linux (Proton), Direct3D 9, full screen, on a 3440x1440 scr
 - **Native 3440x1440** (from 1920x1200): green in the settings menu (so is 2560x1440), the interface fills the screen,
   the left panel shows three previews, the title is centered, the Statistics dialog fits. The whole starting area is
   in view. One bug, fixed: the name label under the third preview (`0x31b4` in the 48,668-byte files) lines up with
-  bottom-anchored labels in the other families, so it moved down with the bottom edge. `uidata_gen.py` now keeps it.
+  bottom-anchored labels in the other families, so it moved down with the bottom edge. `layouts.py` now keeps it.
   But the text is too small to read comfortably: the game has no interface scaling, so the interface and the map
   always grow together.
 - **2560x1080** (from 1680x1050), scaled up 1.33x: the fonts are big enough, the edges and the left panel (two

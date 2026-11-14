@@ -7,7 +7,12 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "click==8.5.1",
+]
+
+[project.scripts]
+mghd-resolution-mod = "mghd_resolution_mod.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/bruno-gelb/mghd_resolution_mod"
@@ -17,7 +22,9 @@ Issues = "https://github.com/bruno-gelb/mghd_resolution_mod/issues"
 [dependency-groups]
 dev = [
     "capstone==5.0.9",      # src/tools: disassembly
-    "pefile==2024.8.26",    # src/tools: reading the exe
+    "pefile==2024.8.26",    # src/tools: reading the exe; build_release.py: checking the version resource
+    "pyinstaller==6.22.3",  # release builds
+    "pytest==9.2.0",        # tests/
 ]
 
 [build-system]
@@ -26,3 +33,6 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "mghd_resolution_mod"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

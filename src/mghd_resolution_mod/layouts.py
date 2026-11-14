@@ -1,6 +1,4 @@
-"""Generate a UIData_<W>_<H>.dat from one of the game's own layouts.
-
-Usage: python uidata_gen.py <Data dir> <W> <H> <out path> [base W base H]
+"""Generate the game's interface layouts, UIData_<W>_<H>.dat, for sizes it doesn't ship, from its own 13.
 
 Without a base, the base is the game's layout with the closest height at or below H (then the closest width), so the
 new layout has everything the designers made for that height, plus room.
@@ -18,9 +16,8 @@ keep the base's value.
 import difflib
 import re
 import struct
-import sys
 from collections import defaultdict
-from pathlib import Path
+from functools import lru_cache
 
 RULES = ("right", "bottom", "hcenter", "vcenter")
 
@@ -32,16 +29,25 @@ ORIGINAL_SIZES = {
 }
 
 
-def load_all(data_dir: Path) -> dict[tuple[int, int], list[int]]:
-    """The game's original layouts in data_dir, as lists of 32-bit words."""
-    files = {}
-    for p in sorted(data_dir.glob("UIData_*.dat")):
-        m = re.fullmatch(r"UIData_(\d+)_(\d+)\.dat", p.name)
-        if not m or (int(m[1]), int(m[2])) not in ORIGINAL_SIZES:
-            continue
-        b = p.read_bytes()
-        files[(int(m[1]), int(m[2]))] = list(struct.unpack(f"<{len(b) // 4}i", b[: len(b) // 4 * 4]))
-    return files
+Size = tuple[int, int]
+Words = tuple[int, ...]
+
+
+def file_name(size: Size) -> str:
+    return f"UIData_{size[0]}_{size[1]}.dat"
+
+
+def parse_name(name: str) -> Size | None:
+    m = re.fullmatch(r"UIData_(\d+)_(\d+)\.dat", name, re.IGNORECASE)
+    return (int(m[1]), int(m[2])) if m else None
+
+
+def to_words(data: bytes) -> Words:
+    return struct.unpack(f"<{len(data) // 4}i", data[: len(data) // 4 * 4])
+
+
+def to_bytes(words: Words) -> bytes:
+    return struct.pack(f"<{len(words)}i", *words)
 
 
 def pick_base(files, W: int, H: int) -> tuple[int, int]:
@@ -70,7 +76,7 @@ def classify_move(d: int, dw: int, dh: int) -> str | None:
     return hits[0] if len(hits) == 1 else "?" if hits else None
 
 
-def learn_rules(files, base) -> dict[int, str]:
+def learn_rules(files: dict[Size, Words], base: Size) -> dict[int, str]:
     """Word index in the base -> its anchor rule.
 
     Two tiers. The base's own family (same file size, so the same records) is asked first, by majority: each family
@@ -151,28 +157,57 @@ OFFSCREEN = 1000
 KEEP = {48668: [0x31B4]}
 
 
-def generate(files, W: int, H: int, base=None) -> tuple[list[int], tuple[int, int], int]:
-    base = base or pick_base(files, W, H)
-    rules = learn_rules(files, base)
-    for off in KEEP.get(len(files[base]) * 4, []):
-        rules.pop(off // 4, None)
+class Generator:
+    """Builds layouts from the game's originals: {size: file contents}. The rules depend only on the base, so they're
+    learned once per base (about 10 seconds each)."""
+
+    def __init__(self, originals: dict[Size, bytes]):
+        self.files = {size: to_words(data) for size, data in originals.items() if size in ORIGINAL_SIZES}
+        self._rules = lru_cache(maxsize=None)(self._learn)
+
+    def _learn(self, base: Size) -> dict[int, str]:
+        rules = learn_rules(self.files, base)
+        for off in KEEP.get(len(self.files[base]) * 4, []):
+            rules.pop(off // 4, None)
+        return rules
+
+    def base_for(self, size: Size) -> Size:
+        return pick_base(self.files, *size)
+
+    def generate(self, size: Size, base: Size | None = None) -> bytes:
+        base = base or self.base_for(size)
+        return to_bytes(generate(self.files, *size, base, self._rules(base)))
+
+
+def generate(files: dict[Size, Words], W: int, H: int, base: Size, rules: dict[int, str]) -> list[int]:
     new = list(files[base])
     for i, rule in rules.items():
         new[i] = apply_rule(rule, new[i], base, W, H)
     if len(new) * 4 == SLOT2_FILE_SIZE and H < SLOT2_BOTTOM:
         for off in SLOT2_Y:
             new[off // 4] += OFFSCREEN
-    return new, base, len(rules)
+    return new
 
 
-def main():
-    data_dir, W, H, out = Path(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), Path(sys.argv[4])
-    base = (int(sys.argv[5]), int(sys.argv[6])) if len(sys.argv) > 6 else None
-    files = load_all(data_dir)
-    new, base, n = generate(files, W, H, base)
-    out.write_bytes(struct.pack(f"<{len(new)}i", *new))
-    print(f"wrote {out} from {base[0]}x{base[1]}: {n} words re-anchored")
+# Screen sizes the installer makes layouts for, besides the player's own screen: common display modes the game doesn't
+# ship a layout for. The game's settings menu lists the display modes the system reports and shows the ones with a
+# layout in green, so the player picks one there. 1720x720 and other sizes that aren't display modes need a scaler
+# (gamescope on Linux) and can be added with --size.
+COMMON_SIZES: list[Size] = [
+    (1280, 720), (1366, 768), (1536, 864),                   # 16:9 laptops
+    (2560, 1440), (3200, 1800), (3840, 2160),                # 16:9
+    (2560, 1600), (2880, 1800), (3840, 2400),                # 16:10
+    (2560, 1080), (3440, 1440), (3840, 1600), (5120, 2160),  # 21:9 ultrawide
+    (3840, 1080), (5120, 1440),                              # 32:9 super ultrawide
+]
+MIN_SIZE: Size = (800, 600)  # the game ignores smaller layouts
 
 
-if __name__ == "__main__":
-    main()
+def sizes_to_make(screens: list[Size], extra: list[Size]) -> list[Size]:
+    """Sizes to generate: the common ones, the screens' and any asked for, minus the ones the game ships."""
+    wanted = [*COMMON_SIZES, *screens, *extra]
+    result = []
+    for size in wanted:
+        if size not in ORIGINAL_SIZES and size not in result and size[0] >= MIN_SIZE[0] and size[1] >= MIN_SIZE[1]:
+            result.append(size)
+    return sorted(result)

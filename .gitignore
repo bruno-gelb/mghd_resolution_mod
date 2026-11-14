@@ -15,3 +15,9 @@ backup/
 # Local working notes between sessions
 STATUS.md
 local/
+
+# PyInstaller
+dist/
+*.spec
+# The release programs' third-party notices, written by src/tools/build_release.py
+src/mghd_resolution_mod/THIRD-PARTY-NOTICES.txt

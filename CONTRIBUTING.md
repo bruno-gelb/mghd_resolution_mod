@@ -7,9 +7,9 @@ its [principles](README.md#principles): no game files in the mod, and a lightwei
 
 The game picks its interface layout from `Data/UIData_<w>_<h>.dat`: the exact size if there's a file for it,
 otherwise the biggest one that fits, centered. It ships 13 of them, up to 1920x1200. The mod generates new ones from
-the player's own files, so the interface fills screens the game never planned for. The target is the screen's shape,
-not always its full size: on a 3440x1440 screen, a 1720x720 game picture scaled up 2x keeps the interface and fonts
-big and sharp, where native 3440x1440 would make them tiny.
+the player's own files, so the interface fills screens the game never planned for: common display modes and the
+player's own screens, which the game's settings menu then shows in green. The interface doesn't scale, so on a big
+screen a smaller size of the same shape, scaled up, keeps the text readable (2560x1080 on a 3440x1440 screen).
 
 What it takes so far:
 
@@ -19,6 +19,11 @@ What it takes so far:
   or below the target, so the new layout has everything the designers made for that height, plus room.
 - **Fixes for heights the game never had.** Below 768 px, the left panel's second building preview doesn't fit, so
   it's moved off the screen.
+- **The version on the main menu**: the mod's name and version in front of the game's version line, in the text
+  archives, and a wider box for it in every layout.
+
+The code is in `src/mghd_resolution_mod/`: `layouts.py` generates the layouts, `textdata.py` handles the text
+archives and the main menu label, `install.py` installs and uninstalls with backups, `cli.py` is the program.
 
 All the details, with offsets and addresses: [docs/findings.md](docs/findings.md).
 
@@ -31,19 +36,27 @@ uv sync
 ```
 
 ```bash
-uv run python src/tools/uidata_gen.py "<game folder>/Data" 1720 720 build/UIData_1720_720.dat
+uv run mghd-resolution-mod
 ```
 
-There's no installer yet: copy the generated file into the game's `Data/` folder, and set `PixWidth` and
-`PixHeight` in `MajXPrefs` (in `Documents/My Games/MajestyHD/`, on Linux inside the game's Proton prefix). Back up
-`MajXPrefs` first. To undo, delete the generated file and put the backup back.
+The same program as the release, from source: `install`, `uninstall` and `status` commands, `--size WxH` for extra
+sizes, `--game-dir` if it doesn't find the game, `--help` for the rest. For testing a size without the menu, set
+`PixWidth` and `PixHeight` in `MajXPrefs` (in `Documents/My Games/MajestyHD/`, on Linux inside the game's Proton
+prefix).
+
+The tests build synthetic game files (the game's own can't go into the repository), so they run without the game,
+on every push and pull request, on Linux and Windows:
+
+```bash
+uv run pytest
+```
 
 Every third-party dependency is pinned to an exact version: Python in `.python-version`, packages in
 `pyproject.toml` and, with their whole tree, in `uv.lock`. Update a pin on purpose, in its own commit, and run
 `uv lock` after changing `pyproject.toml`.
 
-Real-game checks (the game starts, the interface fills the screen, nothing is cut off) are manual: describe them in
-the pull request, with screenshots.
+Real-game checks (the game starts, the interface fills the screen, nothing is cut off, the main menu label) are
+manual: describe them in the pull request, with screenshots.
 
 ## Tools
 
@@ -56,8 +69,9 @@ the pull request, with screenshots.
   uv run python src/tools/uidata_diff.py "<game folder>/Data" 40016
   ```
 
-- `uidata_gen.py`: builds a new `UIData` file for any size, picking the base itself (or pass one). It learns only
-  from the 13 original sizes, so generated files in `Data/` don't matter. About 10 seconds per layout.
+- `build_release.py`: builds the single-file release program for this platform into `dist/` (PyInstaller), with
+  its version in the program's metadata and the bundled software's licenses.
+- `release_notes.py`: prints a version's section of `CHANGELOG.md`, for its GitHub release.
 - `xref.py`: static analysis of the exe, with [pefile](https://github.com/erocarrera/pefile) and
   [Capstone](https://www.capstone-engine.org/). `str` finds a string and disassembles around the code that
   references it, `dis` disassembles from an address. It only disassembles small windows, so it fits in memory on
@@ -104,8 +118,12 @@ big unknowns, for high. High impact with low effort goes first.
 
 Versions follow [semantic versioning](https://semver.org), and the version lives in `pyproject.toml`: the major
 number for changes that make players do something differently, the minor one for new features (resolutions,
-layouts), the patch one for fixes. While it's 0.x, minor versions can also carry bigger changes. There are no
-releases yet.
+layouts), the patch one for fixes. While it's 0.x, minor versions can also carry bigger changes.
+
+To release: set the version in `pyproject.toml`, run `uv lock`, add its section to `CHANGELOG.md`, commit, then tag
+and push the tag (`git tag v0.1.0 && git push origin v0.1.0`). The Release workflow tests, builds the Windows and
+Linux programs and publishes a GitHub release with them and the changelog section. Run it by hand (Actions, Release,
+Run workflow) to only build the programs for testing.
 
 ## License
 

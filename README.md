@@ -7,11 +7,45 @@ and 4K, so the interface fills the screen instead of sitting in a smaller frame 
 
 *The game at 2560x1080, scaled to fill a 3440x1440 monitor with FSR. The original goes up to 1920x1200.*
 
-**Status: early research, nothing to install yet.** The game picks its interface layout from `Data/UIData_<w>_<h>.dat`
-files, and only ships 13 of them, up to 1920x1200. The plan is to generate new ones. A good first target is
-1720x720: exactly half of a 3440x1440 ultrawide, scaled up 2x so the interface stays big and the fonts sharp.
+The game picks its interface layout from `Data/UIData_<w>_<h>.dat` files, and only ships 13 of them, up to 1920x1200.
+On a bigger screen it uses the closest one, in a black frame. The mod generates layouts for the sizes it lacks, from
+the game's own files, on your computer.
 
 - [Findings](docs/findings.md)
+
+## Install
+
+You need [Majesty Gold HD][steam] on Steam. Tested on Linux (Proton); Windows should work the same way, but hasn't
+been tested yet ([#6](https://github.com/bruno-gelb/mghd_resolution_mod/issues/6)). GOG isn't supported yet
+([#4](https://github.com/bruno-gelb/mghd_resolution_mod/issues/4)).
+
+1. Quit the game.
+2. Download the program from the latest release:
+   - Windows: [mghd-resolution-mod-windows.exe][windows]. Double-click it.
+   - Linux: [mghd-resolution-mod-linux][linux]. Make it executable and run it in a terminal:
+
+     ```bash
+     chmod +x mghd-resolution-mod-linux && ./mghd-resolution-mod-linux
+     ```
+
+3. It finds the game, says what it will do and asks first. It takes a minute or two: it makes layouts for common
+   screen sizes (ultrawide 21:9 and 32:9, 1440p, 4K, 16:10 and more) and for your own screens.
+4. Start the game, open **ADJUST SETTINGS** on the main menu and pick your resolution: the ones with a layout are
+   green. The main menu shows the mod's version under the picture.
+
+**Big screens, small text.** The game's interface doesn't scale, so at 3440x1440 or 4K the text gets small. For
+bigger text, pick a lower resolution of your screen's shape, like 2560x1080 on a 3440x1440 screen: the graphics card
+scales it up. Plain scaling makes the fonts blurry; a sharpening scaler fixes that: on Linux, [gamescope] with FSR
+(`gamescope -w 2560 -h 1080 -W 3440 -H 1440 -S fit -F fsr -f -- %command%` in the game's Steam launch options), on
+Windows the graphics driver's (NVIDIA Image Scaling, AMD RSR; not tested yet).
+
+For a size that isn't in the list, like 1720x720 for 2x scaling: `--size 1720x720`.
+
+## Uninstall
+
+Run the program again and choose to remove the mod: it deletes the layouts it added and puts back the original
+files it changed, byte for byte. Or have Steam put the game's files back (Properties, Installed Files, Verify
+integrity of game files), then delete the `mghd-resolution-mod-backup` folder in the game folder.
 
 ## Principles
 
@@ -32,7 +66,9 @@ feature requests and help with testing are most welcome there.
 ## License
 
 The mod's own files (code, documentation) are released under the [MIT License](LICENSE): use, change and share them
-freely. That license covers only what's in this repository.
+freely. That license covers only what's in this repository. The release programs also bundle Python, Click and
+PyInstaller's bootloader, each under its own license: `--licenses` shows them, and each release has them in a
+`THIRD-PARTY-NOTICES.txt` file next to each program.
 
 ## The game and its owners
 
@@ -48,5 +84,8 @@ freely. That license covers only what's in this repository.
   the originals back.
 
 [steam]: https://store.steampowered.com/app/73230/
+[windows]: https://github.com/bruno-gelb/mghd_resolution_mod/releases/latest/download/mghd-resolution-mod-windows.exe
+[linux]: https://github.com/bruno-gelb/mghd_resolution_mod/releases/latest/download/mghd-resolution-mod-linux
+[gamescope]: https://github.com/ValveSoftware/gamescope
 [cyberlore]: https://en.wikipedia.org/wiki/Cyberlore_Studios
 [paradox]: https://www.paradoxinteractive.com/

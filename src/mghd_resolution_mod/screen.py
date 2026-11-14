@@ -1,0 +1,59 @@
+"""The sizes of the player's screens, to make layouts for them."""
+
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+DRM = Path("/sys/class/drm")
+
+
+def _drm_screens() -> list[tuple[int, int]]:
+    """Linux: the preferred (native) mode of each connected display, from the kernel. Unlike xrandr's, not changed by
+    the desktop's display scaling (GNOME at 150% makes a 3440x1440 screen 5160x2160 to X11 programs)."""
+    found = []
+    for status in sorted(DRM.glob("card*-*/status")):
+        try:
+            if status.read_text().strip() != "connected":
+                continue
+            first = (status.parent / "modes").read_text().split("\n", 1)[0]
+        except OSError:
+            continue
+        m = re.fullmatch(r"(\d+)x(\d+)\w*", first.strip())
+        if m and (int(m[1]), int(m[2])) not in found:
+            found.append((int(m[1]), int(m[2])))
+    return found
+
+
+def detect_screens() -> list[tuple[int, int]]:
+    """The native sizes of the player's screens, as far as they can be told."""
+    if sys.platform != "win32":
+        found = _drm_screens()
+        if found:
+            return found
+    main = detect_screen()
+    return [main] if main else []
+
+
+def detect_screen() -> tuple[int, int] | None:
+    """The main screen's size in pixels, or None if it can't be told."""
+    try:
+        if sys.platform == "win32":
+            import ctypes
+
+            user32 = ctypes.windll.user32
+            user32.SetProcessDPIAware()  # real pixels, not the size Windows scaling pretends
+            w, h = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+            return (w, h) if w > 0 and h > 0 else None
+        env = dict(os.environ)
+        if getattr(sys, "frozen", False):  # PyInstaller points LD_LIBRARY_PATH at its own libraries: undo that
+            if "LD_LIBRARY_PATH_ORIG" in env:
+                env["LD_LIBRARY_PATH"] = env["LD_LIBRARY_PATH_ORIG"]
+            else:
+                env.pop("LD_LIBRARY_PATH", None)
+        out = subprocess.run(["xrandr", "--current"], capture_output=True, text=True, timeout=5, env=env).stdout
+        match = re.search(r" connected primary (\d+)x(\d+)", out) or re.search(r" connected (\d+)x(\d+)", out)
+        return (int(match.group(1)), int(match.group(2))) if match else None
+    except Exception:
+        return None
