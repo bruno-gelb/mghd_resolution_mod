@@ -3,6 +3,10 @@
 An unofficial fan mod that adds screen layouts [Majesty Gold HD][steam] doesn't ship with: ultrawide (21:9), 1440p
 and 4K, so the interface fills the screen instead of sitting in a smaller frame in the middle.
 
+![Majesty at 2560x1080, scaled up to a 3440x1440 ultrawide monitor](docs/screenshots/majesty-2560x1080-ultrawide.png)
+
+*The game at 2560x1080, scaled to fill a 3440x1440 monitor with FSR. The original goes up to 1920x1200.*
+
 **Status: early research, nothing to install yet.** The game picks its interface layout from `Data/UIData_<w>_<h>.dat`
 files, and only ships 13 of them, up to 1920x1200. The plan is to generate new ones. A good first target is
 1720x720: exactly half of a 3440x1440 ultrawide, scaled up 2x so the interface stays big and the fonts sharp.
@@ -37,7 +41,8 @@ freely. That license covers only what's in this repository.
   [Majesty Gold HD][steam], or to any other publisher or store of the game.
 - [Majesty Gold HD][steam], its executable, data files, artwork, music and trademarks belong to their respective
   owners. This repository contains none of them, and the mod will only ever ship its own files (new layouts, made
-  from the player's own copy where needed), never the game's files.
+  from the player's own copy where needed), never the game's files. The screenshots show the game's art, which
+  belongs to its owners too.
 - The mod doesn't remove or get around any copy protection, and it won't. To use it, buy the game on [Steam][steam].
 - The game's files are only changed on your computer, in your copy. Steam's "Verify integrity of game files" puts
   the originals back.
