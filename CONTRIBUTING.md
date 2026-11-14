@@ -87,12 +87,13 @@ big unknowns, for high. High impact with low effort goes first.
 - **Commit messages** follow [How to Write a Git Commit Message](https://cbea.ms/git-commit/): a subject line of up
   to 50 characters, capitalized, in the imperative mood ("Hide the second preview", not "Hid..."), with no period at
   the end; a blank line; then a body wrapped at 72 characters that says what changed and why.
-- **Branches** follow [trunk-based development](https://trunkbaseddevelopment.com/): `main` is the trunk and the only
-  long-lived branch. Make each change on a short-lived branch and merge it into `main` with a pull request within a
-  day or two. Pull request titles follow the same rules as commit subjects. Keep `main` working: every merge should
-  leave the mod in a state that runs.
-- **Branch names**: a prefix (`feature`, `bug` or `chore`), a slash, the number of the GitHub issue the branch works
-  on, a hyphen, and a short description in kebab-case (lowercase words joined by hyphens):
+- **Branches**: `main` is the trunk and the only long-lived branch. While the mod is in early research, changes go
+  straight to `main`. Keep it working: every commit should leave the mod in a state that runs. Once there's a
+  release, the plan is [trunk-based development](https://trunkbaseddevelopment.com/) like the Tzar mod: short-lived
+  branches, pull requests, and a protected `main`.
+- **Branch names**, for a change on its own branch: a prefix (`feature`, `bug` or `chore`), a slash, the number of
+  the GitHub issue the branch works on, a hyphen, and a short description in kebab-case (lowercase words joined by
+  hyphens):
   - `feature/1-loading-screen-keypress`
   - `bug/2-panel-cut-off`
 
