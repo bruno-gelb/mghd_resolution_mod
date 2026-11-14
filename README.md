@@ -9,6 +9,17 @@ files, and only ships 13 of them, up to 1920x1200. The plan is to generate new o
 
 - [Findings](docs/findings.md)
 
+## Principles
+
+The same ones as the [Tzar mod](https://github.com/bruno-gelb/ttbotc_resolution_mod):
+
+- **No game files.** The mod never ships any of the game's code or assets: its executable, data, art, music or
+  text. Whatever it needs from the game is made on the player's computer, from their own copy: the new layouts, for
+  one, are generated from the game's own.
+- **Lightweight and strictly technical.** The mod fixes how the game runs on today's hardware (resolutions, screen
+  layouts, scaling) and stays small and easy to remove. No gameplay or balance changes, no new content, no reworked
+  art.
+
 ## Help wanted
 
 Known problems and plans are [GitHub issues](https://github.com/bruno-gelb/mghd_resolution_mod/issues). Bug reports,
