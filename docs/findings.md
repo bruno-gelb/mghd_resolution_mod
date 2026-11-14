@@ -111,3 +111,30 @@ Tested 2026-11-14 on Linux (Proton), Direct3D 9, windowed, with `PixWidth`/`PixH
   (cnc-ddraw, Proton's fullscreen scaling, gamescope).
 
 [steam]: https://store.steampowered.com/app/73230/
+
+## Loading screens (issue #1)
+
+Static analysis, 2026-11-14. Nothing patched or tested yet.
+
+- **The art** is a picture set named `pre_load`, ID `INDo`, in `Data/interfacedata.cam`, with its progress bar
+  `pre_load_bar`, ID `INDl`. The archive's directory gives each set an offset and a size.
+- **The screen layouts** that use it are in `Data/textdata.cam`, in the same record format as the `UIData` files: three
+  of them reference `INDo` (at `0x12190`, `0x1bde4` and `0x3fa90`; the last sits next to `DX00`, the downloadable
+  quests' set, so probably one for the base game, one for the expansion and one for downloadable quests).
+- **The exe never names them**: neither `INDo`, `INDl` nor `pre_load` appears in it in any byte order. The interface is
+  data-driven: the exe works with generic screen and dialog objects, built from these records.
+- **C++ class names (RTTI) are in the exe**, which helps: every screen has a controller class with a findable vtable
+  (`src/tools`-style lookup: type descriptor, then CompleteObjectLocator, then vtable). The menus include
+  `LoadQuestMenu`, `LoadGameController`, `CoverController` (a variant of `DialogController`, probably the dimmed
+  background behind dialogs, not the loading screen) and `MainFrameController`. There's no class with "load screen" or
+  "progress" in its name.
+- **The SDK** (`SDK/`, quest-making guide and GPL scripting reference) doesn't mention the loading screen; it isn't
+  scriptable.
+- `0x548d30` loads the game's data at startup (it calls the GPL loader, `0x574a80`, which reports "There were errors
+  loading GPL"). It's called from `0x4f14fb`, near the resolution code. Not the per-quest loading.
+
+Next step: find the code while it runs. Start a quest with a debugger or a profiler attached (`perf record` on the
+game's process, as in the Tzar mod, or `winedbg`), and catch the function that draws the progress bar and the place
+where the loader returns to the game. A wait for a key or a click (or a minimum display time) goes at that point. The
+fallback, a viewer for the `pre_load` pictures from the player's own copy, needs the image format of the `.cam`
+archives (`CYLBPC` chunks: `PALT`, `IMAG`, `TILE`, `FONT`).
