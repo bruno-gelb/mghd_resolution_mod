@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Game files and dumps stay out of the repo: they're not ours to publish.
+*.exe
+*.dll
+*.dat
+dumps/
+
+# Generated layouts and local backups
+build/
+backup/
+
+# Local working notes between sessions
+STATUS.md

@@ -1,0 +1,21 @@
+[project]
+name = "mghd-resolution-mod"
+# Semantic versioning (https://semver.org).
+version = "0.0.1"
+description = "Resolution mod for Majesty Gold HD: new screen layouts for ultrawide, 1440p and 4K"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/bruno-gelb/mghd_resolution_mod"
+Issues = "https://github.com/bruno-gelb/mghd_resolution_mod/issues"
+
+# Every dependency is pinned to an exact version here, and with its whole tree in uv.lock.
+[dependency-groups]
+dev = [
+    "capstone==5.0.9",      # src/tools: disassembly
+    "pefile==2024.8.26",    # src/tools: reading the exe
+]
