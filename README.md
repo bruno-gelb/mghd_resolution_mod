@@ -7,10 +7,7 @@ and 4K, so the interface fills the screen instead of sitting in a smaller frame 
 
 *The game at 2560x1080, scaled to fill a 3440x1440 monitor with FSR. The original goes up to 1920x1200.*
 
-The game picks its interface layout from `Data/UIData_<w>_<h>.dat` files, and only ships 13 of them, up to 1920x1200.
-On a bigger screen it uses the closest one, in a black frame. The mod generates layouts for the sizes it lacks, from
-the game's own files, on your computer.
-
+- [How it works](docs/how-it-works.md)
 - [Findings](docs/findings.md)
 
 ## Install
