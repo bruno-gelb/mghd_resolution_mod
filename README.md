@@ -8,7 +8,6 @@ and 4K, so the interface fills the screen instead of sitting in a smaller frame 
 *The game at 2560x1080, scaled to fill a 3440x1440 monitor with FSR. The original goes up to 1920x1200.*
 
 - [How it works](docs/how-it-works.md)
-- [Findings](docs/findings.md)
 
 ## Install
 
