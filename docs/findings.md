@@ -1,7 +1,7 @@
 # Findings
 
-Static analysis of [Majesty Gold HD][steam] (Steam, app 73230, `MajestyHD.exe`), 2026-11-13 and 2026-11-14. Not
-tested in the running game yet.
+Static analysis of [Majesty Gold HD][steam] (Steam, app 73230, `MajestyHD.exe`), 2026-11-13 and 2026-11-14, then
+tested in the running game (below).
 
 ## The game's files
 
@@ -83,8 +83,8 @@ tuned on its own.
 Generated on 2026-11-14: 3440x1440, 2560x1440 and 3840x2160 from 1920x1200, 2560x1080 from 1680x1050, 2294x960 from
 1600x900, 1720x720 from 1360x768. None of them pushes off the screen anything the base kept on it, except 1720x720,
 which is shorter than its base: besides the parked slot, a bar under the left panel, a small button at (202, 729) and
-four boxes around y 600 in the middle of the screen, probably parts of dialogs, don't fit. Not tested in the game yet,
-except 1720x720 (an earlier version of it, below).
+four boxes around y 600 in the middle of the screen, probably parts of dialogs, don't fit. Tested since: 3440x1440 and
+2560x1080 (below), and 1720x720 (an earlier version of it, below).
 
 ## First test file
 
@@ -109,6 +109,25 @@ Tested 2026-11-14 on Linux (Proton), Direct3D 9, windowed, with `PixWidth`/`PixH
   listed, since it's not a display mode, but setting it in `MajXPrefs` works. So a `UIData_3440_1440.dat` should turn
   3440x1440 green, and a smaller size than the screen needs something to provide the display mode and scale it up
   (cnc-ddraw, Proton's fullscreen scaling, gamescope).
+
+## Native and scaled-up tests
+
+Tested 2026-11-14 on Linux (Proton), Direct3D 9, full screen, on a 3440x1440 screen:
+
+- **Native 3440x1440** (from 1920x1200): green in the settings menu (so is 2560x1440), the interface fills the screen,
+  the left panel shows three previews, the title is centered, the Statistics dialog fits. The whole starting area is
+  in view. One bug, fixed: the name label under the third preview (`0x31b4` in the 48,668-byte files) lines up with
+  bottom-anchored labels in the other families, so it moved down with the bottom edge. `uidata_gen.py` now keeps it.
+  But the text is too small to read comfortably: the game has no interface scaling, so the interface and the map
+  always grow together.
+- **2560x1080** (from 1680x1050), scaled up 1.33x: the fonts are big enough, the edges and the left panel (two
+  previews) are fine, and it shows about twice the map of the original 1920x1200 frame. Scaled by Proton (linear),
+  the fonts are blurry: 1-pixel strokes smeared over two pixels. Through gamescope with FSR (`-F fsr -S fit
+  --sharpness 2`), they're sharp. Uncapped, about 120 fps on average, 100 at the lowest while scrolling, on a quiet
+  map. On Windows the counterpart would be the graphics driver's sharpening scaler (NVIDIA Image Scaling, AMD RSR),
+  not tested.
+- **The DirectDraw renderer** (`UseD3D=0`) is a dead end under Proton: with cnc-ddraw the ground is black, with
+  Wine's own ddraw the whole window is.
 
 [steam]: https://store.steampowered.com/app/73230/
 

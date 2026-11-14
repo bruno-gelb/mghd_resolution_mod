@@ -145,10 +145,17 @@ SLOT2_Y = [0x2A00, 0x2A44, 0x2A98, 0x2B18, 0x2B6C, 0x2BD8, 0x2C34, 0x2C88, 0x2CD
 SLOT2_BOTTOM = 768
 OFFSCREEN = 1000
 
+# Words the comparisons get wrong, kept at the base's value, by file size. In the 48,668-byte files (the 1200 family),
+# the name label under the third building preview (x 7, y 1154, 190x14) lines up with bottom-anchored labels in the
+# other families, so it would follow the bottom edge and float away from its preview on taller screens.
+KEEP = {48668: [0x31B4]}
+
 
 def generate(files, W: int, H: int, base=None) -> tuple[list[int], tuple[int, int], int]:
     base = base or pick_base(files, W, H)
     rules = learn_rules(files, base)
+    for off in KEEP.get(len(files[base]) * 4, []):
+        rules.pop(off // 4, None)
     new = list(files[base])
     for i, rule in rules.items():
         new[i] = apply_rule(rule, new[i], base, W, H)
