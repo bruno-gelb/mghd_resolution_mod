@@ -2,6 +2,11 @@
 
 Versions follow [semantic versioning](https://semver.org). Each version's section here becomes its release notes.
 
+## Unreleased
+
+- Installing again over an exe whose loading screen patch has its code section's size rounded up, as an early test
+  version had, no longer takes the patched exe for the game's original and backs it up over the real one.
+
 ## 0.3.0 (2026-11-15)
 
 - The loading screen waits for a key or a click before a single-player game starts, with "Press any key to continue"

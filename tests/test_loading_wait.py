@@ -8,8 +8,8 @@ import pytest
 
 from mghd_resolution_mod import loading_wait as lw
 
-BASE, TEXT_RVA, TEXT_RAW, IDATA_RVA, IDATA_RAW = 0x400000, 0x1000, 0x400, 0x3000, 0x1400
-TEXT_SIZE = 0x1000  # raw size; the code uses less, the rest is free
+BASE, TEXT_RVA, TEXT_RAW, IDATA_RVA = 0x400000, 0x1000, 0x400, 0x3000
+FILE_ALIGNMENT = 0x200
 CAME_FROM = 0x7B55E4
 
 
@@ -56,11 +56,14 @@ def program(network_as_method=True, extra_progress=False) -> tuple[bytes, Asm]:
         a.function("progress2", b"\xA1\x08\x17\x7C\x00\x83\xEC\x14\x85\xC0")
         a.function("loader2", *[("call", "progress2")] * 8)
     code = a.build()
-    assert len(code) + len(lw.WAIT_CODE) + 16 < TEXT_SIZE
-    return pe(code), a
+    # Like a linker: the section's size in the file is its code's, rounded up to the file alignment. Pad the code so
+    # the free space left is a little more than the routine needs, as in the game's exes.
+    free = len(lw.WAIT_CODE) + 40
+    code += b"\xCC" * ((-(len(code) + free)) % FILE_ALIGNMENT)
+    return pe(code, len(code) + free), a
 
 
-def pe(code: bytes) -> bytes:
+def pe(code: bytes, text_size: int) -> bytes:
     """A 32-bit PE with .text (the code, then free space) and .idata (the imports)."""
     idata = bytearray(0x200)
     names = {"USER32.dll": ["PeekMessageA", "DispatchMessageA"], "KERNEL32.dll": ["Sleep"]}
@@ -91,13 +94,14 @@ def pe(code: bytes) -> bytes:
     opt = 0x98
     struct.pack_into("<H", head, opt, 0x10B)
     struct.pack_into("<I", head, opt + 28, BASE)
-    struct.pack_into("<II", head, opt + 32, 0x1000, 0x200)
+    struct.pack_into("<II", head, opt + 32, 0x1000, FILE_ALIGNMENT)
     struct.pack_into("<I", head, opt + 92, 16)
     struct.pack_into("<II", head, opt + 96 + 8, IDATA_RVA, 20 * (len(descriptors) + 1))
     sections = opt + 0xE0
-    struct.pack_into("<8sIIII", head, sections, b".text", len(code), TEXT_RVA, TEXT_SIZE, TEXT_RAW)
-    struct.pack_into("<8sIIII", head, sections + 40, b".idata", len(idata), IDATA_RVA, len(idata), IDATA_RAW)
-    text = code + bytes(TEXT_SIZE - len(code))
+    idata_raw = TEXT_RAW + text_size
+    struct.pack_into("<8sIIII", head, sections, b".text", len(code), TEXT_RVA, text_size, TEXT_RAW)
+    struct.pack_into("<8sIIII", head, sections + 40, b".idata", len(idata), IDATA_RVA, len(idata), idata_raw)
+    text = code + bytes(text_size - len(code))
     return bytes(head) + text + bytes(idata)
 
 
@@ -157,3 +161,19 @@ def test_the_routine_matches_its_source():
     assert text[0] == "call 0x10000000" and text[-1].strip() == "ret"
     assert "cmp dword ptr [0x44444444], 0x33375041" in text
     assert text.count("call dword ptr [0x11111111]") == 4
+
+
+def rounded_up(patched: bytes) -> bytes:
+    """The patch with the code section's size in memory rounded up past the routine, as the first test patch had."""
+    out = bytearray(patched)
+    text = lw.read_pe(patched).sections[0]
+    struct.pack_into("<I", out, text.header + 8, text.raw_size)
+    return bytes(out)
+
+
+def test_a_patch_is_recognized_wherever_the_section_size_ends():
+    data, _ = program()
+    rounded = rounded_up(lw.patch(data))
+    assert lw.is_patched(rounded)
+    with pytest.raises(lw.PatchError, match="already"):
+        lw.patch(rounded)

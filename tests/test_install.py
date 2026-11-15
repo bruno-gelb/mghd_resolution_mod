@@ -118,3 +118,18 @@ def test_the_loading_wait(game_dir):
     assert (game_dir / game.EXE).read_bytes() == loading_wait.patch(exe)
     install.uninstall(game_dir, log=lambda _: None)
     assert snapshot(game_dir) == before
+
+
+def test_installing_over_a_patch_with_a_rounded_up_size_keeps_the_original(game_dir):
+    """The first test patch rounded the code section's size up, which hid the routine from 0.3.0: installing again
+    backed the patched exe up as the original."""
+    from test_loading_wait import program, rounded_up
+    from mghd_resolution_mod import loading_wait
+
+    exe, _ = program()
+    (game_dir / game.EXE).write_bytes(exe)
+    install.install(game_dir, SIZES, log=lambda _: None)
+    (game_dir / game.EXE).write_bytes(rounded_up(loading_wait.patch(exe)))
+    install.install(game_dir, SIZES, log=lambda _: None)
+    assert (game_dir / install.BACKUP_DIR / game.EXE).read_bytes() == exe
+    assert (game_dir / game.EXE).read_bytes() == loading_wait.patch(exe)
