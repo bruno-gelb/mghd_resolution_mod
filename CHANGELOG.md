@@ -2,7 +2,7 @@
 
 Versions follow [semantic versioning](https://semver.org). Each version's section here becomes its release notes.
 
-## Unreleased
+## 0.3.0 (2026-11-15)
 
 - The loading screen waits for a key or a click before a single-player game starts, with "Press any key to continue"
   under its progress bar: on today's hardware a quest loads in a moment, and its art flashed by. Multiplayer games
