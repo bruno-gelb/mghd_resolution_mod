@@ -8,6 +8,8 @@ and 4K, so the interface fills the screen instead of sitting in a smaller frame 
 *The game at 2560x1080, scaled to fill a 3440x1440 monitor with FSR. The original goes up to 1920x1200.*
 
 - [How it works](docs/how-it-works.md)
+- [Why not existing projects](docs/why-not-existing-projects.md): the other fixes players use (the screen's own
+  resolution, a stretched lower one, windowed mode with SRWE, cnc-ddraw, DxWnd), and how they compare
 
 ## Install
 
