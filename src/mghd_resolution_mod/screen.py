@@ -11,9 +11,11 @@ DRM = Path("/sys/class/drm")
 
 
 def _drm_screens() -> list[tuple[int, int]]:
-    """Linux: the preferred (native) mode of each connected display, from the kernel. Unlike xrandr's, not changed by
-    the desktop's display scaling (GNOME at 150% makes a 3440x1440 screen 5160x2160 to X11 programs)."""
-    found = []
+    """Linux: the preferred (native) mode of each display that's connected and on, from the kernel. Unlike xrandr's,
+    not changed by the desktop's display scaling (GNOME at 150% makes a 3440x1440 screen 5160x2160 to X11 programs).
+    A laptop's own panel stays connected when the desktop turns it off for an external screen: the kernel then says
+    it isn't enabled, and it's left out. If no connected display is on (no desktop running), all of them count."""
+    on, off = [], []
     for status in sorted(DRM.glob("card*-*/status")):
         try:
             if status.read_text().strip() != "connected":
@@ -21,9 +23,17 @@ def _drm_screens() -> list[tuple[int, int]]:
             first = (status.parent / "modes").read_text().split("\n", 1)[0]
         except OSError:
             continue
+        try:
+            enabled = (status.parent / "enabled").read_text().strip() != "disabled"
+        except OSError:  # an older kernel without the file
+            enabled = True
         m = re.fullmatch(r"(\d+)x(\d+)\w*", first.strip())
-        if m and (int(m[1]), int(m[2])) not in found:
-            found.append((int(m[1]), int(m[2])))
+        if m:
+            (on if enabled else off).append((int(m[1]), int(m[2])))
+    found = []
+    for size in on or off:
+        if size not in found:
+            found.append(size)
     return found
 
 
