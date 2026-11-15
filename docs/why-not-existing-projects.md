@@ -5,8 +5,8 @@ They come from the Steam discussions, the GOG forum, [PCGamingWiki][pcgw], [ModD
 Checked 2026-11-15 ([#10](https://github.com/bruno-gelb/mghd_resolution_mod/issues/10)).
 
 No other project adds screen layouts: every fix below either keeps the game's own 13, up to 1920x1200, or scales the
-picture. The Steam Workshop, Nexus Mods and GitHub have no resolution mod for the game, and searches found no Reddit thread
-about one. The Workshop's mods, like Majesty Expanded, change the gameplay, not the screen.
+picture. The Steam Workshop, Nexus Mods and GitHub have no resolution mod for the game, and searches found no Reddit
+thread about one. The Workshop's mods, like Majesty Expanded, change the gameplay, not the screen.
 
 For comparison, this mod ([how it works](how-it-works.md)):
 
