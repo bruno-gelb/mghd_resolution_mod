@@ -1,7 +1,7 @@
 [project]
 name = "mghd-resolution-mod"
 # Semantic versioning (https://semver.org).
-version = "0.2.0"
+version = "0.2.1"
 description = "Resolution mod for Majesty Gold HD: new screen layouts for ultrawide, 1440p and 4K"
 readme = "README.md"
 license = "MIT"

@@ -2,6 +2,13 @@
 
 Versions follow [semantic versioning](https://semver.org). Each version's section here becomes its release notes.
 
+## 0.2.1 (2026-11-15)
+
+- A laptop's own screen, turned off for an external one, no longer counts as one of the player's screens: it stays
+  connected, but the kernel says it's off. The installer listed it, and would have made a layout for its size.
+- Installing again, when the game's launch is the mod's already, the installer says Steam or Heroic can stay open,
+  instead of asking to close them.
+
 ## 0.2.0 (2026-11-15)
 
 - On Linux, the installer makes Steam (the game's launch options) or Heroic (its wrapper command) start the game
