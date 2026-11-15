@@ -2,19 +2,21 @@
 
 Versions follow [semantic versioning](https://semver.org). Each version's section here becomes its release notes.
 
-## Unreleased
+## 0.2.0 (2026-11-15)
 
 - On Linux, the installer makes Steam (the game's launch options) or Heroic (its wrapper command) start the game
   through the mod's launcher, a copy of the program in the game folder. On a screen taller than 1200 lines it draws
   the game at about 1080 lines and gamescope scales it up with FSR, so the interface is bigger and stays sharp
   (2560x1080 on a 3440x1440 screen). It also sets GNOME's display to 100% while the game runs: with fractional
   scaling the game listed the wrong resolutions and ran slower. Steam or Heroic has to be closed for the installer
-  to change their settings; removing the mod puts the old launch back. `--no-launch` leaves them alone.
+  to change their settings; removing the mod puts the old launch back. `--no-launch` leaves them alone. The bigger
+  interface needs gamescope installed: the installer says how. On Windows there's no gamescope yet
+  ([#12](https://github.com/bruno-gelb/mghd_resolution_mod/issues/12)).
 - The GOG version is supported: the installer finds it in Heroic's GOG installs on Linux and where GOG Galaxy or GOG's
   installer put it on Windows. GOG's build (1.5.2.28) is newer than Steam's (1.5.2.24), and its layouts have a few
   more dialogs, which the mod leaves as they are; the generated layouts are otherwise the same as on Steam
   ([#4](https://github.com/bruno-gelb/mghd_resolution_mod/issues/4)).
-- The main menu label has a comma after the mod's version instead of a dot: `mghd-resolution-mod 0.1.0, game
+- The main menu label has a comma after the mod's version instead of a dot: `mghd-resolution-mod 0.2.0, game
   Version 1.5.2.24`.
 - Generated layouts keep the last bytes of the game's file when its size isn't a multiple of 4 (GOG's aren't), so the
   last string in it isn't cut short.

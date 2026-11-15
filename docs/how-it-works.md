@@ -13,7 +13,7 @@ were. The program keeps the original files it changes and puts them back when yo
    height, and come from the game's layout with the closest height. The game lists them by itself: its settings menu
    shows the resolutions with a layout in green.
 2. **The version line on the main menu**, under the picture, gets the mod's name and version in front:
-   `mghd-resolution-mod 0.1.0, game Version 1.5.2.24`. The text is in the game's text files, `Data/textdata.cam`
+   `mghd-resolution-mod 0.2.0, game Version 1.5.2.24`. The text is in the game's text files, `Data/textdata.cam`
    and, for the expansion, `DataMX/mx_textdata.cam`; the box it's drawn in is in each layout, and is made wider, so
    the longer line fits.
 3. **How the game starts, on Linux.** The installer sets the game's launch options in Steam, or its wrapper command
