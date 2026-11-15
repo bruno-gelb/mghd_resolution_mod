@@ -133,13 +133,13 @@ Tested 2026-11-14 on Linux (Proton), Direct3D 9, full screen, on a 3440x1440 scr
 
 ## Loading screens (issue #1)
 
-Static analysis, 2026-11-14. Nothing patched or tested yet.
+Static analysis, 2026-11-14 and 2026-11-15. Nothing patched or tested yet.
 
 - **The art** is a picture set named `pre_load`, ID `INDo`, in `Data/interfacedata.cam`, with its progress bar
   `pre_load_bar`, ID `INDl`. The archive's directory gives each set an offset and a size.
 - **The screen layouts** that use it are in `Data/textdata.cam`, in the same record format as the `UIData` files: three
-  of them reference `INDo` (at `0x12190`, `0x1bde4` and `0x3fa90`; the last sits next to `DX00`, the downloadable
-  quests' set, so probably one for the base game, one for the expansion and one for downloadable quests).
+  of them reference `INDo` (at `0x12190`, `0x1bde4` and `0x3fa90`). They turned out to be menus, not the loading
+  screen: see below.
 - **The exe never names them**: neither `INDo`, `INDl` nor `pre_load` appears in it in any byte order. The interface is
   data-driven: the exe works with generic screen and dialog objects, built from these records.
 - **C++ class names (RTTI) are in the exe**, which helps: every screen has a controller class with a findable vtable
@@ -152,10 +152,45 @@ Static analysis, 2026-11-14. Nothing patched or tested yet.
 - `0x548d30` loads the game's data at startup (it calls the GPL loader, `0x574a80`, which reports "There were errors
   loading GPL"). It's called from `0x4f14fb`, near the resolution code. Not the per-quest loading.
 
-Next step: find the code while it runs. Start a quest with a debugger or a profiler attached (`perf record` on the
-game's process, as in the Tzar mod, or `winedbg`), and catch the function that draws the progress bar and the place
-where the loader returns to the game. A wait for a key or a click (or a minimum display time) goes at that point. The
-fallback, a viewer for the `pre_load` pictures from the player's own copy, needs the image format of the `.cam`
+### Found 2026-11-15, still static analysis
+
+The way in was the screens' chunk tags: the exe asks for each screen by its `SMNU` chunk's tag, as a 32-bit constant in
+the code (`push 0x30355041` is `AP50`; the main menu's `AP29` appears 34 times). Addresses are Steam's 1.5.2.24; GOG's
+1.5.2.28 has the same code elsewhere (below).
+
+- **The three screens with `INDo` aren't loading screens**: their string tables make them the Load Game menu (`AP27`),
+  the Save Game menu (`AP49`) and the downloaded quests' Load Quest menu (`APd8`), which use the art as a background.
+- **The loading screen is `AP50`**, "seugue cover" (sic) in its strings: the quest's name and icon over the art, its
+  progress bar (`INDl`), and a `Return (invisible button)`. Built at four places (`push 'AP50'` before the screen
+  constructor `0x4b5070`); the screen object is kept in `0x7c1708`.
+- **Its helpers**: `0x494400` opens it (builds `AP50`, fills in the quest's name and icons from the quest at
+  `0x7b6ef8`, draws it); `0x494570` sets the progress bar (element `0xf`); `0x4943e0` would close it but is never
+  called: the callers delete it themselves.
+- **The loader is `0x4e96d0`**, which sets the progress bar 8 times as it goes. Every way into a quest calls it, then
+  `0x424cc0`, which looks like the whole game session (the callers delete the loading screen after it returns, and
+  go back to the main menu): `0x4945f0`, `0x46ed60`, `0x48b9f0` (the expansion's, screen `MX17`) and `0x4f5b40`. They
+  are screens of the game's screen loop, `0x494750`, which runs a screen's function by its tag and takes the tag of
+  the next screen from it.
+- **So the wait goes at the end of the loader**, once: after its last progress update (`call 0x494570` at `0x4e9bef`,
+  the bar full), where it clears bit `0x40` of `0x7b73a0` (7 bytes, `83 25 a0 73 7b 00 bf`). That instruction can
+  become a call to a small loop that waits for a key or a click, then clears the bit itself.
+- **What the loop needs is there**: the exe imports `PeekMessageA`, `TranslateMessage`, `DispatchMessageA`,
+  `GetAsyncKeyState`, `Sleep` and `GetTickCount`, and `.text` has 387 bytes free at its end (raw size `0x334000`,
+  virtual size `0x333e7d`: the virtual size has to grow to cover the loop).
+- **GOG's exe** has the same design: `AP50` built at four places, its screen in `0x7e0490`, the progress function
+  `0x4952d0` called 8 times by the loader `0x4ea3d0`, which has the same four callers. A patch should find its spot by
+  that pattern, not by address.
+
+Still open, and only answered by running it:
+
+- **Multiplayer**: the other players mustn't wait for one player's key, so the wait has to be skipped in a
+  multiplayer game. The flag that tells isn't found yet.
+- **What's on screen while waiting**: the last frame the loader drew should stay up, but the window's messages go to
+  the game's own window procedure, which may try to draw the game before it starts. Input messages shouldn't reach it
+  at all, or the key or click that ends the wait would also act in the game.
+- **A setting**: a keypress, a minimum time, or off.
+
+The fallback, a viewer for the `pre_load` pictures from the player's own copy, needs the image format of the `.cam`
 archives (`CYLBPC` chunks: `PALT`, `IMAG`, `TILE`, `FONT`).
 
 ## The version on the main menu (issue #3)
