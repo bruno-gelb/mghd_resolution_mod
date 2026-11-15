@@ -39,8 +39,11 @@ uv sync
 uv run mghd-resolution-mod
 ```
 
-The same program as the release, from source: `install`, `uninstall` and `status` commands, `--size WxH` for extra
-sizes, `--game-dir` if it doesn't find the game, `--help` for the rest. For testing a size without the menu, set
+The same program as the release, from source: `install`, `uninstall`, `status` and `run` commands, `--size WxH` for
+extra sizes, `--game-dir` if it doesn't find the game, `--help` for the rest. Installed from source, the game's launch
+in Steam or Heroic points at this checkout's Python (`.venv/bin/python -m mghd_resolution_mod run`), not at a copy
+of the program: install with the release program (`uv run python src/tools/build_release.py`, then `dist/`) to try
+what players get, or pass `--no-launch`. For testing a size without the menu, set
 `PixWidth` and `PixHeight` in `MajXPrefs` (in `Documents/My Games/MajestyHD/`, on Linux inside the game's Wine
 prefix: Steam's `compatdata/73230/pfx`, or the one in the game's settings in Heroic).
 

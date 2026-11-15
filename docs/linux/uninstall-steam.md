@@ -1,13 +1,15 @@
 # Uninstall on Linux, Steam version
 
-Run `./mghd-resolution-mod-linux` again, in the folder you installed from, and choose to remove the mod. It puts the
-game's original files back and removes the layouts it added. If you deleted the program, run the line from
-[the install steps](install-steam.md) again.
+Quit Steam (**Steam**, **Exit**), then run `./mghd-resolution-mod-linux` again, in the folder you installed from, and
+choose to remove the mod. It puts your old launch options back, then the game's original files, and removes the
+layouts it added. If you deleted the program, run the line from [the install steps](install-steam.md) again.
 
 ## Without the program
 
 Steam can put the game's changed files back: in your Library, right-click Majesty Gold HD, then **Properties**,
 **Installed Files**, [**Verify integrity of game files**][verify].
+
+Clear the launch options the mod set: right-click Majesty Gold HD, **Properties**, **General**, **Launch Options**.
 
 Then delete what the mod added to the game folder (right-click Majesty Gold HD, **Manage**, **Browse local files**):
 the `mghd-resolution-mod-backup` folder, and in `Data`, the `UIData_<width>_<height>.dat` files the game doesn't

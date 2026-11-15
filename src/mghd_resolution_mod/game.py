@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-from mghd_resolution_mod import heroic
+from mghd_resolution_mod import heroic, procs
 
 STEAM_APP_ID = 73230
 STEAM_INSTALLDIR = "Majesty HD"
@@ -129,12 +129,4 @@ def find() -> list[Path]:
 def running() -> bool:
     """Linux: whether the game is running, as Wine names its process. On Windows, writing its open files fails
     instead."""
-    if sys.platform == "win32":
-        return False
-    for comm in Path("/proc").glob("[0-9]*/comm"):
-        try:
-            if comm.read_text().strip() in PROCESS_NAMES:
-                return True
-        except OSError:  # the process ended meanwhile
-            pass
-    return False
+    return procs.running(PROCESS_NAMES)

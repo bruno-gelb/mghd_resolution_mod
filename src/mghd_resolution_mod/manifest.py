@@ -22,6 +22,8 @@ class Manifest:
     changed: list[str] = field(default_factory=list)
     # The layouts the mod added (Data/UIData_<w>_<h>.dat), deleted on uninstall.
     added: list[str] = field(default_factory=list)
+    # Linux: the launch the mod set up in Steam or Heroic, put back on uninstall (see launch_setup.py). None: none.
+    launch: dict | None = None
 
     @classmethod
     def load(cls, backup_dir: Path) -> "Manifest | None":
@@ -42,7 +44,8 @@ class Manifest:
             raise DamagedManifest(f"{path} is incomplete ({error})") from error
         ok = (isinstance(manifest.version, str)
               and all(isinstance(v, list) and all(isinstance(n, str) for n in v)
-                      for v in (manifest.changed, manifest.added)))
+                      for v in (manifest.changed, manifest.added))
+              and (manifest.launch is None or isinstance(manifest.launch, dict)))
         if not ok:
             raise DamagedManifest(f"{path} has values of the wrong type")
         return manifest

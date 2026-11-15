@@ -202,3 +202,34 @@ Compared 2026-11-15: GOG's copy (Heroic, product `1423481910`, build `1.5.2.28`)
 - **Checked**: for all 15 common sizes, the generator makes Steam's layouts byte for byte as before, and GOG's layouts
   have exactly Steam's chunks plus GOG's own three as the game ships them. On the real GOG copy, install, then
   uninstall, gave back all 564 files byte for byte.
+
+## The launch on Linux
+
+Built 2026-11-15, after running the game for a few days through a local launch script. The code is
+`src/mghd_resolution_mod/launch.py` (the launcher), `display.py`, `steam.py`, `heroic.py` and `launch_setup.py`.
+
+- **GNOME's fractional scaling** with `xwayland-native-scaling` makes Xwayland report the screen scaled up: 3440x1440
+  at 133% is 5160x2160 to X11 programs, with made-up modes under it. The game, under Wine on X11, lists those in
+  **ADJUST SETTINGS**. At 100% it gets the real ones. The kernel's own list (`/sys/class/drm/*/modes`) isn't affected,
+  so the installer reads screen sizes there.
+- **The scale** is GNOME's `org.gnome.Mutter.DisplayConfig` on the session bus: `GetCurrentState`, then
+  `ApplyMonitorsConfig` with the same logical monitor and another scale. The release program has no D-Bus library,
+  so it goes through systemd's `busctl`, whose `--json=short` output reads well and whose arguments take the
+  `uua(iiduba(ssa{sv}))a{sv}` structure flattened. 100% is applied as temporary (method 1), so a crash or logging
+  out falls back to the saved scale; the old scale goes back as persistent (method 2), the same as saved.
+- **gamescope**, tested on a 3440x1440 screen: `--backend sdl -r 60 -S fit -F fsr --sharpness 2 -f
+  --force-grab-cursor`, drawing at 2560x1080. Proton's own scaling smears the fonts; FSR keeps them sharp. Inside
+  gamescope the game sees one screen of the drawn size, so the launcher sets `PixWidth`/`PixHeight` in `MajXPrefs`
+  to it (and `Windowed` 0, `UseD3D` 1).
+- **Where the prefix is**: Steam and Heroic both set `STEAM_COMPAT_DATA_PATH` for Proton. Steam's has the Wine
+  prefix in `pfx/`; Heroic's `pfx` is a link to the folder itself, so `<it>/pfx/drive_c/...` works for both.
+- **Steam's launch options** are in each account's `userdata/<account>/config/localconfig.vdf`, at
+  `UserLocalConfigStore/Software/Valve/Steam/apps/73230/LaunchOptions`: Valve's text KeyValues, tabs, `\"`
+  escaped. Steam keeps the file in memory and writes it back when it quits, so it's changed only while Steam is
+  closed. The mod changes that one value in place and leaves the rest of the file byte for byte.
+- **Heroic's wrapper command** is `wrapperOptions` in `GamesConfig/<game id>.json`, a list of `{exe, args}` it
+  starts the game through. Heroic also keeps it in memory.
+- **Tried 2026-11-15** from the release program on Steam (Proton Experimental) and Heroic (umu, Proton-CachyOS):
+  100% while playing, 2560x1080 scaled up to 3440x1440, sharp, and 133% back after. In both, the launcher saw the game
+  exit with -6: gamescope's nested SDL backend aborts on its way out, after the game has quit. Harmless: Steam and
+  Heroic track the game itself.

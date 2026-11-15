@@ -4,7 +4,8 @@ Installing:
 
 - adds layouts (`Data/UIData_<w>_<h>.dat`) for common screen sizes and the player's own, generated from the game's 13;
 - puts the mod's name and version on the main menu: the text in `Data/textdata.cam` and `DataMX/mx_textdata.cam`, and
-  a wider box for it in the main menu's layout, in every layout and in both text files.
+  a wider box for it in the main menu's layout, in every layout and in both text files;
+- on Linux, makes Steam or Heroic start the game through the mod's launcher (launch_setup.py, launch.py).
 
 Before changing a game file, the mod copies the original to mghd-resolution-mod-backup/ in the game folder, with a
 manifest of what it did, so uninstalling puts the game back exactly. Installing again (after a mod update, or after
@@ -15,7 +16,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from mghd_resolution_mod import __version__, game, layouts, textdata
+from mghd_resolution_mod import __version__, game, launch_setup, layouts, textdata
 from mghd_resolution_mod.game import resolve
 from mghd_resolution_mod.manifest import DamagedManifest, Manifest
 
@@ -35,6 +36,7 @@ class Status:
     # The label is missing from a file the mod changed: the store put the original back (an update, or verifying
     # files).
     reverted: bool = False
+    launch: dict | None = None  # the launch the mod set up, see launch_setup.py
 
 
 def _backup(game_dir: Path) -> Path:
@@ -80,7 +82,7 @@ def status(game_dir: Path) -> Status:
             reverted |= path.is_file() and not _is_modded(rel, path.read_bytes())
         except textdata.FormatError:
             reverted = True
-    return Status(True, manifest.version, manifest.added, reverted)
+    return Status(True, manifest.version, manifest.added, reverted, manifest.launch)
 
 
 def _check(game_dir: Path) -> None:
@@ -167,13 +169,30 @@ def install(game_dir: Path, sizes: list[layouts.Size], log=print) -> Manifest:
     return manifest
 
 
+def set_up_launch(game_dir: Path, log=print) -> dict | None:
+    """Linux: make Steam or Heroic start the game through the mod's launcher, after install(). Returns the launch
+    record, or None when there's nothing to set (not Steam or Heroic). Raises launch_setup.LaunchBlocked when Steam or
+    Heroic needs closing first."""
+    manifest = _manifest(game_dir)
+    if manifest is None:
+        raise InstallError("the mod isn't installed here")
+    record = launch_setup.setup(game_dir, _backup(game_dir), manifest.launch, log)
+    if record is not None:
+        manifest.launch = record
+        manifest.save(_backup(game_dir))
+    return record
+
+
 def uninstall(game_dir: Path, log=print) -> None:
+    """Remove the mod: the launch first (raises launch_setup.LaunchBlocked, with nothing changed yet, if Steam or
+    Heroic needs closing), then the game's files."""
     backup = _backup(game_dir)
     manifest = _manifest(game_dir)
     if manifest is None:
         raise InstallError("the mod isn't installed here (no backup folder found)")
     if game.running():
         raise InstallError("Majesty is running: quit the game first")
+    launch_setup.remove(manifest.launch, log)
     log(f"Removing the {len(manifest.added)} layouts the mod added")
     for rel in manifest.added:
         path = resolve(game_dir, rel)

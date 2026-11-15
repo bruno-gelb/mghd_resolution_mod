@@ -1,15 +1,19 @@
-"""Heroic Games Launcher: where it installed GOG's Majesty Gold HD.
+"""Heroic Games Launcher: where it installed GOG's Majesty Gold HD, and the game's wrapper command.
 
-Heroic keeps its GOG installs in gog_store/installed.json, a list of {appName, install_path}. The mod changes only
-files in the game folder, so it doesn't need the Wine prefix Heroic runs the game in.
+Heroic keeps its GOG installs in gog_store/installed.json, a list of {appName, install_path}, and each game's settings
+in GamesConfig/<appName>.json, under the game's ID. One of them, wrapperOptions, is a list of {exe, args}: programs
+Heroic starts the game through, like Steam's launch options. Heroic keeps the settings in memory while it runs and
+writes them back, so they're changed only while Heroic is closed.
 """
 
 import json
 import os
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 GOG_ID = "1423481910"
+PROCESS_NAMES = {"heroic"}
 
 
 def _config_dirs() -> list[Path]:
@@ -23,6 +27,16 @@ def _config_dirs() -> list[Path]:
 CONFIG_DIRS = _config_dirs()
 
 
+@dataclass
+class Install:
+    config_dir: Path
+    game_dir: Path
+
+    @property
+    def settings(self) -> Path:
+        return self.config_dir / "GamesConfig" / f"{GOG_ID}.json"
+
+
 def _json(path: Path) -> object:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -30,8 +44,8 @@ def _json(path: Path) -> object:
         return None
 
 
-def game_dirs() -> list[Path]:
-    """The folders of the GOG installs of Majesty Gold HD that Heroic knows about."""
+def installs() -> list[Install]:
+    """The GOG installs of Majesty Gold HD that Heroic knows about."""
     found = []
     for config in CONFIG_DIRS:
         data = _json(config / "gog_store" / "installed.json")
@@ -41,5 +55,49 @@ def game_dirs() -> list[Path]:
                 continue
             path = entry.get("install_path")
             if isinstance(path, str) and path:
-                found.append(Path(path))
+                found.append(Install(config, Path(path)))
     return found
+
+
+def game_dirs() -> list[Path]:
+    return [i.game_dir for i in installs()]
+
+
+def find(game_dir: Path) -> Install | None:
+    """The Heroic install in this folder, if Heroic installed it."""
+    try:
+        wanted = game_dir.resolve()
+    except OSError:
+        return None
+    for install in installs():
+        try:
+            if install.game_dir.resolve() == wanted:
+                return install
+        except OSError:
+            continue
+    return None
+
+
+class SettingsError(ValueError):
+    pass
+
+
+def _load(settings: Path) -> dict:
+    data = _json(settings)
+    if not isinstance(data, dict) or not isinstance(data.get(GOG_ID), dict):
+        raise SettingsError(f"{settings} isn't there or isn't Heroic's: start the game from Heroic once, quit it, "
+                            "and run this again")
+    return data
+
+
+def get_wrappers(settings: Path) -> list:
+    wrappers = _load(settings)[GOG_ID].get("wrapperOptions", [])
+    return wrappers if isinstance(wrappers, list) else []
+
+
+def set_wrappers(settings: Path, wrappers: list) -> None:
+    data = _load(settings)
+    data[GOG_ID]["wrapperOptions"] = wrappers
+    tmp = settings.with_name(settings.name + ".mghd-tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    tmp.replace(settings)

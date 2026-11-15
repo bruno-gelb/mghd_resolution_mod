@@ -90,3 +90,12 @@ def snapshot(root: Path) -> dict[str, bytes]:
 @pytest.fixture(autouse=True)
 def not_running(monkeypatch):
     monkeypatch.setattr(game, "running", lambda: False)
+
+
+@pytest.fixture(autouse=True)
+def no_real_launchers(monkeypatch):
+    """Tests never read or write the real Heroic's or Steam's settings."""
+    from mghd_resolution_mod import heroic, launch_setup
+    monkeypatch.setattr(heroic, "CONFIG_DIRS", [])
+    monkeypatch.setattr(launch_setup.game, "_steam_roots", lambda: [])
+    monkeypatch.setattr(launch_setup, "running", lambda store: False)
