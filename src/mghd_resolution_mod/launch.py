@@ -167,7 +167,8 @@ def run(command: list[str], log_dir: Path | None = None) -> int:
         if child and child.poll() is None:
             child.send_signal(signum)
 
-    handlers = {s: signal.signal(s, forward) for s in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+    names = ("SIGTERM", "SIGINT", "SIGHUP")  # Windows has no SIGHUP (run is for Linux, but tests run there too)
+    handlers = {s: signal.signal(s, forward) for s in (getattr(signal, n) for n in names if hasattr(signal, n))}
     try:
         log(f"starting: {command}")
         child = subprocess.Popen(command, env=procs.child_env())
