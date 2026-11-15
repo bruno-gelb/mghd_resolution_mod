@@ -125,7 +125,9 @@ def _launch_plan(path: Path, sizes: list[layouts.Size], wanted: bool) -> layouts
     size = launch.screen_size(current)
     available = sorted({*launch.available_sizes(path), *sizes})
     render = launch.pick_render(size, available) if size else None
-    click.echo(f"{store.name} will start the game through the mod, which:")
+    change = launch_setup.needs_change(path, path / install.BACKUP_DIR)
+    starts = "will start" if change else "starts"
+    click.echo(f"{store.name} {starts} the game through the mod, which:")
     if current and abs(current.scale - 1.0) > 0.001:
         scale = f"{current.scale * 100:.0f}%"
         click.echo(f"  - sets the display to 100% while you play (at {scale} the game lists the wrong resolutions")
@@ -144,8 +146,12 @@ def _launch_plan(path: Path, sizes: list[layouts.Size], wanted: bool) -> layouts
         render = None
     else:
         click.echo("  - starts the game at the size you pick in ADJUST SETTINGS.")
-    click.echo(f"It changes the game's launch in {store.name}'s settings ({store.name} has to be closed for that), and")
-    click.echo("removing the mod puts it back. --no-launch leaves them alone.\n")
+    if change:
+        click.echo(f"It changes the game's launch in {store.name}'s settings ({store.name} has to be closed for")
+        click.echo("that), and removing the mod puts it back. --no-launch leaves them alone.\n")
+    else:
+        click.echo(f"The game's launch in {store.name} is the mod's already, so {store.name} can stay open.")
+        click.echo("Removing the mod puts your old launch back.\n")
     return render
 
 

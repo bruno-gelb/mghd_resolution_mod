@@ -119,3 +119,19 @@ def test_no_launch_outside_steam_and_heroic(game_dir):
 
 def test_steam_options_quote_paths_with_spaces():
     assert launch_setup.steam_options(["/a b/x", "run"]) == '"/a b/x" run %command%'
+
+
+@linux_only
+def test_steam_needs_closing_only_when_its_settings_change(steam_game):
+    game_dir, config = steam_game
+    backup = game_dir / install.BACKUP_DIR
+    install.install(game_dir, SIZES, **quiet)
+    assert launch_setup.needs_change(game_dir, backup)
+    install.set_up_launch(game_dir, **quiet)
+    assert not launch_setup.needs_change(game_dir, backup)
+    steam.write(config, "73230", "player's own %command%")
+    assert launch_setup.needs_change(game_dir, backup)
+
+
+def test_nothing_to_change_outside_steam_and_heroic(game_dir):
+    assert not launch_setup.needs_change(game_dir, game_dir / install.BACKUP_DIR)

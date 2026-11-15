@@ -92,6 +92,24 @@ def _write(store: Store, config: Path, value) -> None:
         heroic.set_wrappers(config, value if value is not None else [])
 
 
+def _value(store: Store, backup: Path, copy: bool):
+    command = launcher(backup, copy)
+    return steam_options(command) if store.name == "Steam" else heroic_wrappers(command)
+
+
+def needs_change(game_dir: Path, backup: Path) -> bool:
+    """Whether setup() would change Steam's or Heroic's settings, so they'd have to be closed. False when the launch
+    is the mod's already (installing again), or there's nothing to set."""
+    store = store_for(game_dir)
+    if store is None:
+        return False
+    value = _value(store, backup, copy=False)
+    try:
+        return any(_read(store, config) != value for config in store.configs)
+    except (OSError, steam.VdfError, heroic.SettingsError):
+        return True  # setup() says what's wrong
+
+
 def setup(game_dir: Path, backup: Path, record: dict | None, log) -> dict | None:
     """Point the game's launcher at the mod's. Returns the manifest's new launch record, or None when there's no
     launcher to set (not Steam or Heroic, or not Linux). Raises LaunchBlocked when a change is needed and the
@@ -99,8 +117,7 @@ def setup(game_dir: Path, backup: Path, record: dict | None, log) -> dict | None
     store = store_for(game_dir)
     if store is None:
         return None
-    command = launcher(backup)
-    value = steam_options(command) if store.name == "Steam" else heroic_wrappers(command)
+    value = _value(store, backup, copy=True)
     old = {e["config"]: e for e in (record or {}).get("entries", []) if isinstance(e, dict) and "config" in e}
     entries, changes = [], []
     for config in store.configs:
