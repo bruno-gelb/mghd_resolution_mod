@@ -249,17 +249,28 @@ def patch(data: bytes) -> bytes:
 
 
 def is_patched(data: bytes) -> bool:
-    """Whether this exe has the wait: its code section reaches past where the game's own code ends, into the
-    routine. A game update or a file check puts the original back."""
+    """Whether this exe has the wait: the routine in the free space at the end of its code section. A game update or
+    a file check puts the original back.
+
+    The routine starts on a 16-byte boundary in that free space, which is less than one file alignment unit (the
+    section's size in the file is its code's, rounded up to it). Every such spot is checked, not only the one the
+    section's size in memory points at: a patch that rounded that size up (like the first test patch did) would hide
+    the routine otherwise, and the installer would take the patched exe for an original."""
     try:
         pe = read_pe(data)
-    except PatchError:
+        opt = struct.unpack_from("<I", data, 0x3C)[0] + 24
+        alignment = struct.unpack_from("<I", data, opt + 36)[0]
+    except (PatchError, struct.error):
         return False
     text = next((s for s in pe.sections if s.name == b".text"), None)
-    if text is None or text.vsize < len(WAIT_CODE):
+    if text is None or not 0 < alignment <= 0x10000:
         return False
-    end = text.raw + text.vsize
-    tail = data[end - len(WAIT_CODE):end]
     filled = {o + k for o in [LOADER_REL, *(o for offsets in FIXUPS.values() for o in offsets)] for k in range(4)}
-    return len(tail) == len(WAIT_CODE) and all(tail[i] == WAIT_CODE[i] for i in range(len(WAIT_CODE))
-                                               if i not in filled)
+    raw_end = text.raw + text.raw_size
+    for start in range(max(text.raw, raw_end - alignment - len(WAIT_CODE)), raw_end - len(WAIT_CODE) + 1):
+        if (text.rva + start - text.raw) % 16:
+            continue
+        spot = data[start:start + len(WAIT_CODE)]
+        if all(spot[i] == WAIT_CODE[i] for i in range(len(WAIT_CODE)) if i not in filled):
+            return True
+    return False
