@@ -13,7 +13,7 @@ puts them back when you remove the mod.
    height, and come from the game's layout with the closest height. The game lists them by itself: its settings menu
    shows the resolutions with a layout in green.
 2. **The version line on the main menu**, under the picture, gets the mod's name and version in front:
-   `mghd-resolution-mod 0.1.0. game Version 1.5.2.24`. The text is in the game's text files, `Data/textdata.cam`
+   `mghd-resolution-mod 0.1.0, game Version 1.5.2.24`. The text is in the game's text files, `Data/textdata.cam`
    and, for the expansion, `DataMX/mx_textdata.cam`; the box it's drawn in is in each layout, and is made wider, so
    the longer line fits.
 

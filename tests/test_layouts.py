@@ -39,3 +39,23 @@ def test_names():
     assert layouts.file_name((2560, 1080)) == "UIData_2560_1080.dat"
     assert layouts.parse_name("uidata_2560_1080.DAT") == (2560, 1080)
     assert layouts.parse_name("UIData_x.dat") is None
+
+
+def test_bytes_after_the_last_word_are_kept():
+    files = {size: data + b"xy\0" for size, data in originals().items()}  # GOG's layouts end mid-word
+    assert layouts.Generator(files).generate((3440, 1440)).endswith(b"xy\0")
+
+
+def test_slot_fix_follows_the_hud_chunk():
+    """The 768 family's second building slot goes offscreen below 768 px, wherever the HUD chunk is in the file (GOG's
+    layouts have more chunks before it than Steam's)."""
+    hud_at = 0x40
+    words = [600] * ((hud_at + layouts.SLOT2_HUD_SIZE) // 4)
+    files = {(1280, 768): tuple(words)}
+    hud = (hud_at, layouts.SLOT2_HUD_SIZE)
+    low = layouts.generate(files, 1280, 720, (1280, 768), {}, hud)
+    slots = [(hud_at + off) // 4 for off in layouts.SLOT2_Y]
+    assert all(low[i] == 600 + layouts.OFFSCREEN for i in slots)
+    assert sum(v != 600 for v in low) == len(slots)
+    assert layouts.generate(files, 1366, 768, (1280, 768), {}, hud) == words
+    assert layouts.generate(files, 1280, 720, (1280, 768), {}, (hud_at, 6948)) == words  # another family

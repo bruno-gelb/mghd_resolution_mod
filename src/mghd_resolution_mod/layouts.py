@@ -19,6 +19,8 @@ import struct
 from collections import defaultdict
 from functools import lru_cache
 
+from mghd_resolution_mod import textdata
+
 RULES = ("right", "bottom", "hcenter", "vcenter")
 
 # The layouts the game ships. Only these are learned from: generated ones in the same folder would teach the
@@ -141,20 +143,26 @@ def apply_rule(rule: str, v: int, base, W: int, H: int) -> int:
     }[rule]
 
 
+# The fixes below are in the in-game interface's chunk, SMNU/APMK, which is the same in Steam's 1.5.2.24 and GOG's
+# 1.5.2.28 (GOG's layouts add other chunks before it, so the files' sizes and the chunk's offset differ). Its size tells
+# the layout's family apart, and the fixes' offsets are from its start.
+HUD_CHUNK = (b"SMNU", b"APMK")
+
 # The 768-high layouts' left panel stacks two building previews at fixed positions: slot 1 at y 428-601, slot 2 at y
 # 601-768. Below 768 px slot 2 is cut off, so it goes below the screen instead (the designers park unused elements at
 # x=1000, y=1000 the same way). These are the offsets of the y words of slot 2's 15 rectangles (frame, picture,
-# borders, icon row) in the 40,016-byte files.
-SLOT2_FILE_SIZE = 40016
-SLOT2_Y = [0x2A00, 0x2A44, 0x2A98, 0x2B18, 0x2B6C, 0x2BD8, 0x2C34, 0x2C88, 0x2CDC,
-           0x2D38, 0x2DA4, 0x2E10, 0x2E7C, 0x2EE8, 0x2F4C]
+# borders, icon row) in the 6,864-byte chunk of the 768 family (Steam's 40,016-byte files).
+SLOT2_HUD_SIZE = 6864
+SLOT2_Y = [0x1528, 0x156C, 0x15C0, 0x1640, 0x1694, 0x1700, 0x175C, 0x17B0, 0x1804,
+           0x1860, 0x18CC, 0x1938, 0x19A4, 0x1A10, 0x1A74]
 SLOT2_BOTTOM = 768
 OFFSCREEN = 1000
 
-# Words the comparisons get wrong, kept at the base's value, by file size. In the 48,668-byte files (the 1200 family),
-# the name label under the third building preview (x 7, y 1154, 190x14) lines up with bottom-anchored labels in the
-# other families, so it would follow the bottom edge and float away from its preview on taller screens.
-KEEP = {48668: [0x31B4]}
+# Words the comparisons get wrong, kept at the base's value, by the chunk's size. In the 8,480-byte chunk of the 1200
+# family (Steam's 48,668-byte files), the name label under the third building preview (x 7, y 1154, 190x14) lines up
+# with bottom-anchored labels in the other families, so it would follow the bottom edge and float away from its
+# preview on taller screens.
+KEEP = {8480: [0x1C6C]}
 
 
 class Generator:
@@ -162,13 +170,18 @@ class Generator:
     learned once per base (about 10 seconds each)."""
 
     def __init__(self, originals: dict[Size, bytes]):
-        self.files = {size: to_words(data) for size, data in originals.items() if size in ORIGINAL_SIZES}
+        originals = {size: data for size, data in originals.items() if size in ORIGINAL_SIZES}
+        self.files = {size: to_words(data) for size, data in originals.items()}
+        # The bytes after the last whole word: GOG's layouts aren't a multiple of 4 bytes long.
+        self.tails = {size: data[len(data) // 4 * 4 :] for size, data in originals.items()}
+        self.huds = {size: textdata.find_chunk(data, *HUD_CHUNK) for size, data in originals.items()}
         self._rules = lru_cache(maxsize=None)(self._learn)
 
     def _learn(self, base: Size) -> dict[int, str]:
         rules = learn_rules(self.files, base)
-        for off in KEEP.get(len(self.files[base]) * 4, []):
-            rules.pop(off // 4, None)
+        hud = self.huds[base]
+        for off in KEEP.get(hud[1], []) if hud else []:
+            rules.pop((hud[0] + off) // 4, None)
         return rules
 
     def base_for(self, size: Size) -> Size:
@@ -176,16 +189,18 @@ class Generator:
 
     def generate(self, size: Size, base: Size | None = None) -> bytes:
         base = base or self.base_for(size)
-        return to_bytes(generate(self.files, *size, base, self._rules(base)))
+        new = generate(self.files, *size, base, self._rules(base), self.huds[base])
+        return to_bytes(new) + self.tails[base]
 
 
-def generate(files: dict[Size, Words], W: int, H: int, base: Size, rules: dict[int, str]) -> list[int]:
+def generate(files: dict[Size, Words], W: int, H: int, base: Size, rules: dict[int, str],
+             hud: tuple[int, int] | None = None) -> list[int]:
     new = list(files[base])
     for i, rule in rules.items():
         new[i] = apply_rule(rule, new[i], base, W, H)
-    if len(new) * 4 == SLOT2_FILE_SIZE and H < SLOT2_BOTTOM:
+    if hud and hud[1] == SLOT2_HUD_SIZE and H < SLOT2_BOTTOM:
         for off in SLOT2_Y:
-            new[off // 4] += OFFSCREEN
+            new[(hud[0] + off) // 4] += OFFSCREEN
     return new
 
 

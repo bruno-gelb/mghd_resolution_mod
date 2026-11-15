@@ -41,8 +41,8 @@ uv run mghd-resolution-mod
 
 The same program as the release, from source: `install`, `uninstall` and `status` commands, `--size WxH` for extra
 sizes, `--game-dir` if it doesn't find the game, `--help` for the rest. For testing a size without the menu, set
-`PixWidth` and `PixHeight` in `MajXPrefs` (in `Documents/My Games/MajestyHD/`, on Linux inside the game's Proton
-prefix).
+`PixWidth` and `PixHeight` in `MajXPrefs` (in `Documents/My Games/MajestyHD/`, on Linux inside the game's Wine
+prefix: Steam's `compatdata/73230/pfx`, or the one in the game's settings in Heroic).
 
 The tests build synthetic game files (the game's own can't go into the repository), so they run without the game,
 on every push and pull request, on Linux and Windows:

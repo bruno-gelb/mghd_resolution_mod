@@ -8,8 +8,8 @@ tested in the running game (below).
 - `Data/` has 13 interface layouts, one file each: `UIData_<w>_<h>.dat` for 800x600, 1024x768, 1280x768, 1280x800,
   1280x960, 1280x1024, 1360x768, 1440x900, 1600x900, 1600x1200, 1680x1050, 1920x1080 and 1920x1200. `DataMX/` (the
   expansion) has none: both campaigns use the same layouts.
-- The settings are in `MajXPrefs`, an XML file in `Documents/My Games/MajestyHD/` (on Linux, inside the Proton
-  prefix): `PixWidth`, `PixHeight`, `UseD3D`, `Windowed` and others.
+- The settings are in `MajXPrefs`, an XML file in `Documents/My Games/MajestyHD/` (on Linux, inside the Wine
+  prefix: Steam's Proton one, or Heroic's): `PixWidth`, `PixHeight`, `UseD3D`, `Windowed` and others.
 - The exe also has a `-keepintroresolution` command-line switch (not checked yet).
 
 ## How the exe picks a layout
@@ -178,3 +178,27 @@ Tested 2026-11-14: the main menu shows `mghd-resolution-mod 0.0.1. game Version 
 - **The font has no `_`**: it draws the repo name's underscores as hyphens, so the label says `mghd-resolution-mod`.
 - Removing the label and narrowing the box gives back the original files byte for byte. Still to do, in the installer:
   the 13 original layouts (only the generated ones and the text archives are done so far), backups, and uninstall.
+
+## The GOG version (issue #4)
+
+Compared 2026-11-15: GOG's copy (Heroic, product `1423481910`, build `1.5.2.28`) against Steam's (`1.5.2.24`).
+
+- **Not the same build.** GOG's `MajestyHD.exe` is 4,058,112 bytes (Steam's 3,933,696), with `Galaxy.dll` next to it
+  instead of `steam_api.dll`. Of the 558 files both have, 527 are byte-identical. The other 31: the exe, the 13
+  layouts, `Data/InterfaceStrings.xml`, `Data/addinterface_se.cam`, and the scripts (`.bcd`, and the SDK's `.gpl`
+  sources, small gameplay changes).
+- **The text archives are identical**: `Data/textdata.cam` and `DataMX/mx_textdata.cam`, so the main menu label works
+  unchanged. GOG also has a `Data/mx_textdata.cam`, a byte-identical copy of `DataMX/mx_textdata.cam`, which the mod
+  doesn't touch.
+- **The layouts** have the same chunks as Steam's, byte for byte, except in the main menu section: two new screens
+  (`SMNU`/`AP42` and `AP55`, with string tables of the same names; one mentions Galaxy) and a bigger `APda`. Those
+  three are the same at every size, so the generator leaves them as they are, which is right. The files are 4,127
+  bytes longer (2,073 for 800x600), and no longer a multiple of 4.
+- **What the generator needed**: it works on 32-bit words, and dropped the last 1-3 bytes of a file that isn't a
+  multiple of 4, which on GOG cut the end off the last string (`...Galaxy`). It now keeps them. Its two hand-made
+  fixes (the 768 family's second building slot, and the 1200 family's preview label) were keyed by Steam's file sizes
+  and offsets; they're now keyed by the in-game interface's chunk, `SMNU`/`APMK`, which is identical in both builds,
+  and offsets from its start.
+- **Checked**: for all 15 common sizes, the generator makes Steam's layouts byte for byte as before, and GOG's layouts
+  have exactly Steam's chunks plus GOG's own three as the game ships them. On the real GOG copy, install, then
+  uninstall, gave back all 564 files byte for byte.

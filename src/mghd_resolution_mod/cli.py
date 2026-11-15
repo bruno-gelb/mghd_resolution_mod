@@ -121,7 +121,7 @@ def _do_uninstall(path: Path) -> None:
 def _interactive(path: Path, state: install.Status, extra: list[layouts.Size]) -> None:
     if state.installed:
         if state.reverted:
-            click.echo("The mod is installed, but the game's files were put back, probably by a Steam update.\n")
+            click.echo("The mod is installed, but the game's files were put back, probably by a game update.\n")
         picked = _menu("What now?", ["install again (and add any new sizes)",
                                      "remove the mod and put the original files back", "nothing"],
                        default=1 if state.reverted else 3)
@@ -162,7 +162,7 @@ def cli(ctx: click.Context, sizes: tuple, game_dir: Path | None) -> None:
 @yes_option
 @click.pass_context
 def install_command(ctx: click.Context, sizes: tuple, game_dir: Path | None, yes: bool) -> None:
-    """Install the mod, or install it again (after a Steam update, or to add sizes)."""
+    """Install the mod, or install it again (after a game update, or to add sizes)."""
     path, _ = _open_game(game_dir or ctx.obj["game_dir"])
     planned = _plan([*ctx.obj["sizes"], *sizes])
     if yes or click.confirm("Install the mod?", default=True):
@@ -190,7 +190,7 @@ def status_command(ctx: click.Context, game_dir: Path | None) -> None:
         sizes = [layouts.parse_name(Path(rel).name) for rel in state.added]
         click.echo(f"Layouts added: {_fmt([s for s in sizes if s])}")
         if state.reverted:
-            click.echo("The game's files were put back since (a Steam update?): install again.")
+            click.echo("The game's files were put back since (a game update?): install again.")
 
 
 def main() -> None:

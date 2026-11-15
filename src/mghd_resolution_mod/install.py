@@ -8,7 +8,7 @@ Installing:
 
 Before changing a game file, the mod copies the original to mghd-resolution-mod-backup/ in the game folder, with a
 manifest of what it did, so uninstalling puts the game back exactly. Installing again (after a mod update, or after
-Steam put the original files back) works from those backups.
+Steam or GOG put the original files back) works from those backups.
 """
 
 import shutil
@@ -32,7 +32,8 @@ class Status:
     installed: bool
     version: str | None
     added: list[str]
-    # The label is missing from a file the mod changed: Steam put the original back (an update, or verifying files).
+    # The label is missing from a file the mod changed: the store put the original back (an update, or verifying
+    # files).
     reverted: bool = False
 
 
@@ -45,8 +46,8 @@ def _manifest(game_dir: Path) -> Manifest | None:
         return Manifest.load(_backup(game_dir))
     except DamagedManifest as error:
         raise InstallError(f"the mod's backup record is damaged: {error}. The original files are still in "
-                           f"{BACKUP_DIR}/; restore them by hand, or have Steam verify the game's files and delete "
-                           "that folder") from error
+                           f"{BACKUP_DIR}/; restore them by hand, or have Steam or GOG verify the game's files and "
+                           "delete that folder") from error
 
 
 def _original_layouts(game_dir: Path) -> list[str]:
@@ -96,7 +97,7 @@ def _check(game_dir: Path) -> None:
 
 def _originals(game_dir: Path, manifest: Manifest, log) -> dict[str, bytes]:
     """The game's own version of every file the mod changes, from the backup or, for files not backed up yet or put
-    back by Steam since, from the game folder. Backs up what's new."""
+    back by the store since, from the game folder. Backs up what's new."""
     backup = _backup(game_dir)
     result = {}
     for rel in [*TEXT_FILES, *_original_layouts(game_dir)]:
@@ -113,8 +114,9 @@ def _originals(game_dir: Path, manifest: Manifest, log) -> dict[str, bytes]:
             saved.write_bytes(current)
         elif modded and not saved.is_file():
             raise InstallError(f"{rel} was already changed by something else, and there's no backup of it. Restore "
-                               "the game's files first (in Steam: Properties, Installed Files, Verify integrity of "
-                               "game files)")
+                               "the game's files first: in Steam, Properties, Installed Files, Verify integrity of "
+                               "game files; in Heroic, Verify and Repair on the game's page; in GOG Galaxy, Manage "
+                               "installation, Verify / Repair")
         result[rel] = saved.read_bytes()
         if rel not in manifest.changed:
             manifest.changed.append(rel)

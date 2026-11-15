@@ -29,6 +29,9 @@ Run `./mghd-resolution-mod-linux` again after a Steam update, to put the mod bac
   ```
 
   Inside gamescope the game sees one screen of the `-w`/`-h` size, so that's the resolution to pick in the game.
+- **Display scaling.** With fractional scaling on in GNOME (125%, 150% and the like), the game sees a bigger, scaled
+  screen and offers the wrong resolutions in **ADJUST SETTINGS**. Set the display to 100% while you play, for
+  example with a script in the game's Steam launch options that switches to 100% and back when the game exits.
 - `--yes` skips the question: `./mghd-resolution-mod-linux install --yes`.
 - If it can't find the game, copy the program into the game's folder (in Steam: right-click Majesty Gold HD,
   **Manage**, **Browse local files**) and run it from there.

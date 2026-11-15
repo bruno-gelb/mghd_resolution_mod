@@ -33,7 +33,7 @@ MENU_TABLE = b"GMTX"
 MENU_ID = 0x56
 MENU_VERSION = b"Version %s"
 # Hyphens, not the repo name's underscores: the game's font has no `_` and draws it as `-` anyway.
-MENU_LABEL = "mghd-resolution-mod {version}. game {original}"
+MENU_LABEL = "mghd-resolution-mod {version}, game {original}"
 
 BOX = struct.pack("<3i", -1, 0, 2)
 VERSION_BOX = (162, 498, 183, 21)
@@ -62,6 +62,21 @@ def _entries(data: bytes) -> list[int]:
     for table in sorted(_tables(data).values()):
         entries += [table + 8 + ENTRY_SIZE * k for k in range(_u32(data, table))]
     return entries
+
+
+def find_chunk(data: bytes, section: bytes, tag: bytes) -> tuple[int, int] | None:
+    """(offset, size) of the first chunk with this tag in this section, or None, also when data isn't CYLBPC."""
+    try:
+        table = _tables(data).get(section)
+        if table is None:
+            return None
+        for k in range(_u32(data, table)):
+            entry = table + 8 + ENTRY_SIZE * k
+            if data[entry : entry + 4] == tag:
+                return _u32(data, entry + 20), _u32(data, entry + 24)
+    except (FormatError, struct.error):
+        pass
+    return None
 
 
 def _strings(data: bytes, chunk: int) -> list[tuple[int, int, bytes]]:

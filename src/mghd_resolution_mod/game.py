@@ -1,9 +1,13 @@
-"""Find the game folder: Steam libraries, or the folder the program runs from. And whether the game is running."""
+"""Find the game folder: Steam libraries, GOG installs (Heroic, and GOG's own installer on Windows), or the folder the
+program runs from. And whether the game is running.
+"""
 
 import os
 import re
 import sys
 from pathlib import Path
+
+from mghd_resolution_mod import heroic
 
 STEAM_APP_ID = 73230
 STEAM_INSTALLDIR = "Majesty HD"
@@ -90,11 +94,28 @@ def _steam_game_dirs() -> list[Path]:
     return found
 
 
+def _gog_windows_dirs() -> list[Path]:
+    """Windows: where GOG's installer (or GOG Galaxy) put the game, from GOG's registry key."""
+    if sys.platform != "win32":
+        return []
+    import winreg
+
+    found = []
+    for key in [rf"SOFTWARE\WOW6432Node\GOG.com\Games\{heroic.GOG_ID}", rf"SOFTWARE\GOG.com\Games\{heroic.GOG_ID}"]:
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key) as k:
+                found.append(Path(winreg.QueryValueEx(k, "path")[0]))
+        except OSError:
+            pass
+    return found
+
+
 def find() -> list[Path]:
-    """Game folders found on this machine: the program's own folder and the working folder first, then Steam's."""
+    """Game folders found on this machine: the program's own folder and the working folder first, then Steam's, then
+    GOG's (Heroic, and GOG's installer on Windows)."""
     here = Path(sys.executable if getattr(sys, "frozen", False) else sys.argv[0]).resolve().parent
     seen, result = set(), []
-    for path in [here, Path.cwd(), *_steam_game_dirs()]:
+    for path in [here, Path.cwd(), *_steam_game_dirs(), *heroic.game_dirs(), *_gog_windows_dirs()]:
         try:
             key = path.resolve()
         except OSError:

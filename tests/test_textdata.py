@@ -3,7 +3,7 @@ import struct
 import pytest
 
 from mghd_resolution_mod import textdata
-from conftest import make_layout, make_textdata
+from conftest import make_layout, make_textdata, menu_layout
 
 
 def chunks(data: bytes) -> list[tuple[bytes, bytes]]:
@@ -14,8 +14,8 @@ def chunks(data: bytes) -> list[tuple[bytes, bytes]]:
 def test_label_puts_the_mod_in_front_of_the_menu_line():
     data = make_textdata()
     labelled = textdata.label(data, "1.2.3")
-    assert textdata.find_menu_version(labelled)[2] == b"mghd-resolution-mod 1.2.3. game Version %s"
-    assert len(labelled) == len(data) + len(b"mghd-resolution-mod 1.2.3. game ")
+    assert textdata.find_menu_version(labelled)[2] == b"mghd-resolution-mod 1.2.3, game Version %s"
+    assert len(labelled) == len(data) + len(b"mghd-resolution-mod 1.2.3, game ")
 
 
 def test_label_keeps_every_other_string_and_chunk():
@@ -72,3 +72,12 @@ def test_the_box_keeps_its_center():
 def test_no_box_at_800x600():
     data = make_layout((800, 600))
     assert textdata.widen_version_box(data) == data
+
+
+def test_find_chunk():
+    data = make_textdata()
+    offset, size = textdata.find_chunk(data, b"SMNU", b"AP29")
+    assert data[offset:offset + size] == menu_layout()
+    assert textdata.find_chunk(data, b"SMNU", b"APMK") is None
+    assert textdata.find_chunk(data, b"XXXX", b"AP29") is None
+    assert textdata.find_chunk(b"not an archive", b"SMNU", b"AP29") is None

@@ -11,19 +11,21 @@ and 4K, so the interface fills the screen instead of sitting in a smaller frame 
 
 ## Install
 
-You need [Majesty Gold HD][steam] on Steam.
+You need [Majesty Gold HD][steam] on Steam or [GOG][gog].
 
 - [Windows + Steam](docs/windows/install-steam.md)
+- [Windows + GOG](docs/windows/install-gog.md)
 - [Linux + Steam](docs/linux/install-steam.md)
-
-The GOG version isn't supported yet ([#4](https://github.com/bruno-gelb/mghd_resolution_mod/issues/4)).
+- [Linux + GOG (Heroic)](docs/linux/install-gog.md)
 
 ## Uninstall
 
-Run the program again and choose to remove the mod, or let Steam put the game's files back:
+Run the program again and choose to remove the mod, or let the store put the game's files back:
 
 - [Windows + Steam](docs/windows/uninstall-steam.md)
+- [Windows + GOG](docs/windows/uninstall-gog.md)
 - [Linux + Steam](docs/linux/uninstall-steam.md)
+- [Linux + GOG (Heroic)](docs/linux/uninstall-gog.md)
 
 ## Principles
 
@@ -57,10 +59,12 @@ PyInstaller's bootloader, each under its own license: `--licenses` shows them, a
   owners. This repository contains none of them, and the mod will only ever ship its own files (new layouts, made
   from the player's own copy where needed), never the game's files. The screenshots show the game's art, which
   belongs to its owners too.
-- The mod doesn't remove or get around any copy protection, and it won't. To use it, buy the game on [Steam][steam].
-- The game's files are only changed on your computer, in your copy. Steam's "Verify integrity of game files" puts
-  the originals back.
+- The mod doesn't remove or get around any copy protection, and it won't. To use it, buy the game on [Steam][steam]
+  or [GOG][gog].
+- The game's files are only changed on your computer, in your copy. Steam's "Verify integrity of game files", or
+  GOG's "Verify / Repair", puts the originals back.
 
 [steam]: https://store.steampowered.com/app/73230/
+[gog]: https://www.gog.com/en/game/majesty_gold_hd
 [cyberlore]: https://en.wikipedia.org/wiki/Cyberlore_Studios
 [paradox]: https://www.paradoxinteractive.com/
