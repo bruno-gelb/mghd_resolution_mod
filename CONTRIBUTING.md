@@ -107,13 +107,13 @@ big unknowns, for high. High impact with low effort goes first.
 - **Commit messages** follow [How to Write a Git Commit Message](https://cbea.ms/git-commit/): a subject line of up
   to 50 characters, capitalized, in the imperative mood ("Hide the second preview", not "Hid..."), with no period at
   the end; a blank line; then a body wrapped at 72 characters that says what changed and why.
-- **Branches**: `main` is the trunk and the only long-lived branch. While the mod is in early research, changes go
-  straight to `main`. Keep it working: every commit should leave the mod in a state that runs. Once there's a
-  release, the plan is [trunk-based development](https://trunkbaseddevelopment.com/) like the Tzar mod: short-lived
-  branches, pull requests, and a protected `main`.
-- **Branch names**, for a change on its own branch: a prefix (`feature`, `bug` or `chore`), a slash, the number of
-  the GitHub issue the branch works on, a hyphen, and a short description in kebab-case (lowercase words joined by
-  hyphens):
+- **Branches** follow [trunk-based development](https://trunkbaseddevelopment.com/), like the Tzar mod: `main` is the
+  trunk and the only long-lived branch. Make each change on a short-lived branch and merge it into `main` with a pull
+  request within a day or two. `main` is protected: it takes no direct pushes, no force pushes and can't be deleted.
+  Pull request titles follow the same rules as commit subjects. Keep `main` working: every merge should leave the mod
+  in a state that installs and runs.
+- **Branch names**: a prefix (`feature`, `bug` or `chore`), a slash, the number of the GitHub issue the branch works
+  on, a hyphen, and a short description in kebab-case (lowercase words joined by hyphens):
   - `feature/1-loading-screen-keypress`
   - `bug/2-panel-cut-off`
 
@@ -123,9 +123,19 @@ Versions follow [semantic versioning](https://semver.org), and the version lives
 number for changes that make players do something differently, the minor one for new features (resolutions,
 layouts), the patch one for fixes. While it's 0.x, minor versions can also carry bigger changes.
 
-To release: set the version in `pyproject.toml`, run `uv lock`, add its section to `CHANGELOG.md`, commit, then tag
-and push the tag (`git tag v0.1.0 && git push origin v0.1.0`). The Release workflow tests, builds the Windows and
-Linux programs and publishes a GitHub release with them and the changelog section. Run it by hand (Actions, Release,
+To release:
+
+1. Turn `CHANGELOG.md`'s Unreleased section into the version's, with the date: it becomes the release notes.
+2. Set the version in `pyproject.toml`, run `uv lock`, commit (`Release 0.3.0`) and merge it into `main` with a pull
+   request.
+3. Tag the merged commit on `main` and push the tag:
+
+   ```bash
+   git tag v0.3.0 && git push origin v0.3.0
+   ```
+
+The Release workflow tests, builds the Windows and Linux programs and publishes a GitHub release with them and the
+changelog section. Run it by hand (Actions, Release,
 Run workflow) to only build the programs for testing.
 
 ## License
