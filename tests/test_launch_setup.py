@@ -34,7 +34,8 @@ def heroic_game(game_dir, tmp_path, monkeypatch):
         {"installed": [{"appName": heroic.GOG_ID, "install_path": str(game_dir)}]}))
     (config / "GamesConfig").mkdir()
     settings = config / "GamesConfig" / f"{heroic.GOG_ID}.json"
-    settings.write_text(json.dumps({heroic.GOG_ID: {"winePrefix": "/x", "wrapperOptions": [{"exe": "mine", "args": ""}]},
+    mine = [{"exe": "mine", "args": ""}]
+    settings.write_text(json.dumps({heroic.GOG_ID: {"winePrefix": "/x", "wrapperOptions": mine},
                                     "version": "v0"}, indent=2))
     monkeypatch.setattr(heroic, "CONFIG_DIRS", [config])
     return game_dir, settings

@@ -2,6 +2,14 @@
 
 Versions follow [semantic versioning](https://semver.org). Each version's section here becomes its release notes.
 
+## Unreleased
+
+- The loading screen waits for a key or a click before a single-player game starts, with "Press any key to continue"
+  under its progress bar: on today's hardware a quest loads in a moment, and its art flashed by. Multiplayer games
+  start as before, so nobody waits for one player. It's a small patch to the game's exe, found from its code, so it
+  works on the Steam and GOG versions; the exe's original is kept with the other files and put back on uninstall
+  ([#1](https://github.com/bruno-gelb/mghd_resolution_mod/issues/1)).
+
 ## 0.2.1 (2026-11-15)
 
 - A laptop's own screen, turned off for an external one, no longer counts as one of the player's screens: it stays

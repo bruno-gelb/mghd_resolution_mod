@@ -5,6 +5,8 @@ Installing:
 - adds layouts (`Data/UIData_<w>_<h>.dat`) for common screen sizes and the player's own, generated from the game's 13;
 - puts the mod's name and version on the main menu: the text in `Data/textdata.cam` and `DataMX/mx_textdata.cam`, and
   a wider box for it in the main menu's layout, in every layout and in both text files;
+- makes the loading screen wait for a key or a click before a single-player game starts: a patch to the game's exe
+  (loading_wait.py), and "Press any key to continue" on the loading screen in both text files;
 - on Linux, makes Steam or Heroic start the game through the mod's launcher (launch_setup.py, launch.py).
 
 Before changing a game file, the mod copies the original to mghd-resolution-mod-backup/ in the game folder, with a
@@ -16,7 +18,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from mghd_resolution_mod import __version__, game, launch_setup, layouts, textdata
+from mghd_resolution_mod import __version__, game, launch_setup, layouts, loading_wait, textdata
 from mghd_resolution_mod.game import resolve
 from mghd_resolution_mod.manifest import DamagedManifest, Manifest
 
@@ -60,6 +62,8 @@ def _original_layouts(game_dir: Path) -> list[str]:
 
 
 def _is_modded(rel: str, data: bytes) -> bool:
+    if rel == game.EXE:
+        return loading_wait.is_patched(data)
     if rel in TEXT_FILES:
         return textdata.find_menu_version(data)[2] != textdata.MENU_VERSION
     return textdata.narrow_version_box(data) != data  # 800x600 has no main menu, so never counts as changed
@@ -102,7 +106,7 @@ def _originals(game_dir: Path, manifest: Manifest, log) -> dict[str, bytes]:
     back by the store since, from the game folder. Backs up what's new."""
     backup = _backup(game_dir)
     result = {}
-    for rel in [*TEXT_FILES, *_original_layouts(game_dir)]:
+    for rel in [*TEXT_FILES, *_original_layouts(game_dir), game.EXE]:
         current = resolve(game_dir, rel).read_bytes()
         saved = backup / rel
         try:
@@ -138,14 +142,22 @@ def install(game_dir: Path, sizes: list[layouts.Size], log=print) -> Manifest:
     originals = _originals(game_dir, manifest, log)
     manifest.save(backup)  # before changing anything: an install that stops halfway can still be undone
 
+    try:
+        patched = loading_wait.patch(originals[game.EXE])
+    except loading_wait.PatchError as error:
+        patched = None
+        log(f"The loading screens stay as they are: this {game.EXE} isn't one the mod knows ({error})")
+    _write(resolve(game_dir, game.EXE), patched or originals[game.EXE])
     for rel in TEXT_FILES:
-        _write(resolve(game_dir, rel), textdata.widen_version_box(textdata.label(originals[rel], __version__)))
+        text = textdata.widen_version_box(textdata.label(originals[rel], __version__))
+        _write(resolve(game_dir, rel), textdata.add_loading_hint(text) if patched else text)
     log("Added the mod's version to the main menu")
-    original_layouts = {layouts.parse_name(Path(rel).name): data for rel, data in originals.items()
-                        if rel not in TEXT_FILES}
-    for rel, data in originals.items():
-        if rel not in TEXT_FILES:
-            _write(resolve(game_dir, rel), textdata.widen_version_box(data))
+    if patched:
+        log("The loading screen waits for a key or a click before a single-player game starts")
+    layout_files = {rel: data for rel, data in originals.items() if rel not in TEXT_FILES and rel != game.EXE}
+    original_layouts = {layouts.parse_name(Path(rel).name): data for rel, data in layout_files.items()}
+    for rel, data in layout_files.items():
+        _write(resolve(game_dir, rel), textdata.widen_version_box(data))
 
     wanted = sorted({*sizes, *(layouts.parse_name(Path(rel).name) for rel in manifest.added)})
     generator = layouts.Generator(original_layouts)

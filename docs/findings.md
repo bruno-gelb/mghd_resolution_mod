@@ -133,7 +133,7 @@ Tested 2026-11-14 on Linux (Proton), Direct3D 9, full screen, on a 3440x1440 scr
 
 ## Loading screens (issue #1)
 
-Static analysis, 2026-11-14 and 2026-11-15. Nothing patched or tested yet.
+Static analysis on 2026-11-14 and 2026-11-15, then built and tested in the game (below).
 
 - **The art** is a picture set named `pre_load`, ID `INDo`, in `Data/interfacedata.cam`, with its progress bar
   `pre_load_bar`, ID `INDl`. The archive's directory gives each set an offset and a size.
@@ -181,17 +181,35 @@ the code (`push 0x30355041` is `AP50`; the main menu's `AP29` appears 34 times).
   `0x4952d0` called 8 times by the loader `0x4ea3d0`, which has the same four callers. A patch should find its spot by
   that pattern, not by address.
 
-Still open, and only answered by running it:
+### Built and tested 2026-11-15
 
-- **Multiplayer**: the other players mustn't wait for one player's key, so the wait has to be skipped in a
-  multiplayer game. The flag that tells isn't found yet.
-- **What's on screen while waiting**: the last frame the loader drew should stay up, but the window's messages go to
-  the game's own window procedure, which may try to draw the game before it starts. Input messages shouldn't reach it
-  at all, or the key or click that ends the wait would also act in the game.
-- **A setting**: a keypress, a minimum time, or off.
+The code is `src/mghd_resolution_mod/loading_wait.py`, with the routine's source in `src/tools/loading_wait.s`, and
+`textdata.add_loading_hint`. Tested in the game on Steam (Proton) and GOG (Heroic): the loading screen stays up with
+the hint until a key or a click, with the keyboard and the mouse, and the quest starts without seeing the press.
 
-The fallback, a viewer for the `pre_load` pictures from the player's own copy, needs the image format of the `.cam`
-archives (`CYLBPC` chunks: `PALT`, `IMAG`, `TILE`, `FONT`).
+- **Multiplayer**, found statically. The screen `AP73` is the multiplayer staging room (player borders, Ready, chat).
+  From it, the screen loop calls the network game's start (`0x4f5b40`), which compares the game's mode at `+0x70`
+  with 2 and 3. The freestyle starts (`0x46ed60`, `0x48b9f0`) start network games too: each compares its argument,
+  the screen the player came from, with `AP73` before using the network session. The screen loop passes that from
+  the global `0x7b55e4`, which it sets to `AP73` on entering the staging room. So the network start's call to the
+  loader isn't patched, and the routine doesn't wait when `0x7b55e4` holds `AP73`. Not tried in a real multiplayer
+  game yet ([#8](https://github.com/bruno-gelb/mghd_resolution_mod/issues/8)).
+- **The patch**: the three single-player starts' calls to the loader go to a 222-byte routine in the free space at the
+  end of `.text` (Steam: 387 bytes free from `0x734e80`; GOG: 259 from `0x74cf00`), whose virtual size grows to
+  cover it. The routine calls the loader, then drops the keys and clicks pressed during loading (`PeekMessageA` with
+  `PM_REMOVE` over the keyboard and mouse ranges), waits for `WM_KEYDOWN` or a button down, and swallows its release,
+  so the game never sees the press. Other input is dropped; everything else goes to `DispatchMessageA`, so the window
+  stays alive. A `WM_QUIT` is left in the queue for the game, and ends the wait.
+- **On screen while it waits**: the last frame the loader drew stays up. The game's window procedure doesn't redraw it.
+- **GOG's 1.5.2.28**: the same code at other addresses (loader `0x4ea3d0`, its callers `0x46ffa0`, `0x48afd0`,
+  `0x495350` and the network start `0x4f8470`, the global `0x7d3844`), and the mode moved to `+0x68`. The network
+  start is told apart in both builds by how it's called: as a method, `mov ecx, <register>` right before the call.
+- **The hint**: a text element like the quest name's (`kind 5`, key `6` its ID, `7` its string, `18` its font), with
+  the small font `fnt4`, ID `8886`, under the progress bar at (81, 576, 640x21), and string 5 in the screen's table.
+  The strip between the bar and the frame's edge is about the font's height, so it's tight. The expansion's screen
+  has its logo between the art and the bar, so there's no room there.
+
+The fallback, a viewer for the `pre_load` pictures from the player's own copy, wasn't needed.
 
 ## The version on the main menu (issue #3)
 

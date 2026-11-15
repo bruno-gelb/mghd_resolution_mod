@@ -48,13 +48,24 @@ def menu_layout() -> bytes:
     return struct.pack("<17i", 7, 7, -1, 0, 2, 15, 10, 768, 520, *BOX, 7)
 
 
+def loading_layout() -> bytes:
+    """The loading screen: a header, the art, and the quest name's text (ID 8885) with a color."""
+    fn11, inti = struct.unpack("<i", b"fn11")[0], struct.unpack("<i", b"INTI")[0]
+    words = [1000, 2, -1, -1, 800, 600, 10, 2, -1,
+             0, 2, 24, 96, 751, 376, 33, 0, 6, 1, -1,
+             5, 2, 94, 11, 684, 60, 7, 1, 10, 16, 12, inti, 13, 1005, 6, 8885, 18, fn11, 36, 3, 7, 8, 9, 38, 0, -1,
+             -1]
+    return struct.pack(f"<{len(words)}i", *words)
+
+
 def make_textdata(extra: bytes = b"") -> bytes:
     general = [(i, f"string {i}".encode()) for i in range(0x50, 0x58)]
     general[6] = (0x56, textdata.MENU_VERSION)
     return cylbpc([
-        (b"SMNU", [(b"AP65", b"\x01" * 12), (b"AP29", menu_layout())]),
+        (b"SMNU", [(b"AP65", b"\x01" * 12), (b"AP29", menu_layout()), (b"AP50", loading_layout())]),
         (b"STRT", [
             (b"AP29", string_table([(9, b"Cheat Play Replay"), (10, b"Version #"), (11, b"ADJUST SETTINGS")])),
+            (b"AP50", string_table([(0, b"seugue cover"), (1, b"Current Quest Name")])),
             (b"GMTX", string_table(general)),
             (b"GDB8", string_table([(1, b"after" + extra)])),
         ]),

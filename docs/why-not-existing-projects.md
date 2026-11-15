@@ -5,8 +5,9 @@ They come from the Steam discussions, the GOG forum, [PCGamingWiki][pcgw], [ModD
 Checked 2026-11-15 ([#10](https://github.com/bruno-gelb/mghd_resolution_mod/issues/10)).
 
 No other project adds screen layouts: every fix below either keeps the game's own 13, up to 1920x1200, or scales the
-picture. The Steam Workshop, Nexus Mods and GitHub have no resolution mod for the game, and searches found no Reddit
-thread about one. The Workshop's mods, like Majesty Expanded, change the gameplay, not the screen.
+picture. None of them touches the loading screen either. The Steam Workshop, Nexus Mods and GitHub have no resolution
+mod for the game, and searches found no Reddit thread about one. The Workshop's mods, like Majesty Expanded, change the
+gameplay, not the screen.
 
 For comparison, this mod ([how it works](how-it-works.md)):
 
@@ -14,6 +15,8 @@ For comparison, this mod ([how it works](how-it-works.md)):
   and 16:10 up to 4K, 21:9 and 32:9 ultrawides, laptop sizes and the player's own screens;
 - on Linux, draws the game at about 1080 lines in the screen's shape and scales it up with gamescope's FSR, so the
   text stays readable on a big screen;
+- makes the loading screen wait for a key or a click before a single-player game starts, with "Press any key to
+  continue", so the quest's art no longer flashes by on today's hardware (multiplayer games start as before);
 - installs and uninstalls with one program, and keeps the originals;
 - is made for the Steam and GOG versions, on Windows and on Linux (Proton, Heroic), though it hasn't been tried on
   Windows yet ([#6](https://github.com/bruno-gelb/mghd_resolution_mod/issues/6)), and doesn't scale the picture there

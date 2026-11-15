@@ -93,3 +93,28 @@ def test_damaged_manifest(game_dir):
     (game_dir / install.BACKUP_DIR / "manifest.json").write_text(json.dumps({"changed": []}))
     with pytest.raises(install.InstallError, match="damaged"):
         install.status(game_dir)
+
+
+def test_an_unknown_exe_gets_no_wait_and_no_hint(game_dir):
+    lines = []
+    install.install(game_dir, SIZES, log=lines.append)
+    assert any("loading screens stay as they are" in line for line in lines)
+    assert (game_dir / game.EXE).read_bytes() == b"MZ fake exe"
+    assert textdata.HINT not in (game_dir / game.DATA / "textdata.cam").read_bytes()
+
+
+def test_the_loading_wait(game_dir):
+    from test_loading_wait import program
+    from mghd_resolution_mod import loading_wait
+
+    exe, _ = program()
+    (game_dir / game.EXE).write_bytes(exe)
+    before = snapshot(game_dir)
+    install.install(game_dir, SIZES, log=lambda _: None)
+    assert loading_wait.is_patched((game_dir / game.EXE).read_bytes())
+    for rel in install.TEXT_FILES:
+        assert textdata.HINT in (game_dir / rel).read_bytes()
+    install.install(game_dir, SIZES, log=lambda _: None)  # again: from the backup, not on top of the patch
+    assert (game_dir / game.EXE).read_bytes() == loading_wait.patch(exe)
+    install.uninstall(game_dir, log=lambda _: None)
+    assert snapshot(game_dir) == before

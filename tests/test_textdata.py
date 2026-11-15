@@ -81,3 +81,23 @@ def test_find_chunk():
     assert textdata.find_chunk(data, b"SMNU", b"APMK") is None
     assert textdata.find_chunk(data, b"XXXX", b"AP29") is None
     assert textdata.find_chunk(b"not an archive", b"SMNU", b"AP29") is None
+
+
+def test_the_loading_hint():
+    data = make_textdata()
+    hinted = textdata.add_loading_hint(data)
+    assert textdata.add_loading_hint(hinted) == hinted
+    assert textdata.find_menu_version(hinted)[2] == textdata.MENU_VERSION  # the main menu's line, found as before
+    start, size = textdata.find_chunk(hinted, b"SMNU", b"AP50")
+    header, elements = textdata.parse_layout(hinted[start:start + size])
+    hint = dict(textdata.layout_props(elements[-1]))
+    assert elements[-1][2:6] == list(textdata.HINT_RECT) and hint[6] == textdata.HINT_ID and hint[7] == 2
+    assert hint[18] == textdata.HINT_FONT and hint[36] == [7, 8, 9] and 12 not in hint and 13 not in hint
+    strings_at, _ = textdata.find_chunk(hinted, b"STRT", b"AP50")
+    assert [(id_, text) for _, id_, text in textdata._strings(hinted, strings_at)] == [
+        (0, b"seugue cover"), (1, b"Current Quest Name"), (2, textdata.HINT)]
+    assert textdata.find_menu_version(textdata.label(hinted, "1.0"))[2].startswith(b"mghd-resolution-mod 1.0")
+
+
+def test_no_loading_screen_no_hint():
+    assert textdata.add_loading_hint(b"CYLBPC  " + bytes(12)) == b"CYLBPC  " + bytes(12)
