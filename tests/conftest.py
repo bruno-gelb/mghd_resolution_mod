@@ -99,6 +99,13 @@ def snapshot(root: Path) -> dict[str, bytes]:
 
 
 @pytest.fixture(autouse=True)
+def no_game_reported(monkeypatch):
+    """The report's game folder is set by the program as it runs: each test starts without one."""
+    from mghd_resolution_mod import report
+    monkeypatch.setattr(report, "game_dir", None)
+
+
+@pytest.fixture(autouse=True)
 def not_running(monkeypatch):
     monkeypatch.setattr(game, "running", lambda: False)
 

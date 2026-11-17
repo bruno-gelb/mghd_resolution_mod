@@ -7,15 +7,26 @@ anything.
 import re
 import shutil
 import sys
+import traceback
 from pathlib import Path
 
 import click
 
-from mghd_resolution_mod import (__version__, display, game, heroic, install, launch, launch_setup, layouts, screen,
-                                 steam)
+from mghd_resolution_mod import (
+    __version__,
+    display,
+    game,
+    heroic,
+    install,
+    launch,
+    launch_setup,
+    layouts,
+    report,
+    screen,
+    steam,
+)
 
 PROG = "mghd-resolution-mod"
-ISSUES = "https://github.com/bruno-gelb/mghd_resolution_mod/issues"
 # Written by src/tools/build_release.py and bundled with the release programs: the licenses of what's inside them.
 NOTICES = Path(__file__).parent / "THIRD-PARTY-NOTICES.txt"
 
@@ -69,6 +80,7 @@ def _menu(title: str, options: list[str], default: int = 1) -> int:
 
 def _pick_game_dir(given: Path | None) -> Path:
     if given:
+        report.game_dir = given
         if not game.is_game_dir(given):
             raise install.InstallError(f"{given} doesn't look like the Majesty Gold HD folder (no {game.EXE} and "
                                        f"{game.DATA} folder in it)")
@@ -86,6 +98,7 @@ def _pick_game_dir(given: Path | None) -> Path:
 def _open_game(game_dir: Path | None) -> tuple[Path, install.Status]:
     click.echo(f"Majesty Gold HD resolution mod {__version__}\n")
     path = _pick_game_dir(game_dir)
+    report.game_dir = path
     state = install.status(path)
     click.echo(f"Game folder: {path}")
     if state.installed:
@@ -294,6 +307,16 @@ def run_command(command: tuple) -> int:
     return launch.run(list(command))
 
 
+def _offer_report(lead: str, message: str, trace: str | None = None) -> None:
+    try:
+        url = report.issue_url(message, trace)
+    except Exception:  # never let the report hide the error it's about
+        url = f"{report.ISSUES}/new"
+    click.echo(f"\n{lead} This link starts a GitHub issue with the details filled in; nothing is sent")
+    click.echo("until you submit it:")
+    click.echo(url)
+
+
 def main() -> None:
     # Started by double-click on Windows: keep the window open at the end so the result can be read.
     pause = sys.platform == "win32" and len(sys.argv) == 1
@@ -308,6 +331,13 @@ def main() -> None:
         code = error.exit_code
     except install.InstallError as error:
         click.echo(f"\nCan't continue: {error}")
+        _offer_report("Stuck?", str(error))
+        code = 1
+    except Exception as error:  # a bug in the mod: show it, and keep the window open for it
+        trace = traceback.format_exc()
+        click.echo(f"\n{trace.rstrip()}")
+        click.echo("\nSomething went wrong inside the mod: that's a bug in it, not something you did.")
+        _offer_report("Please tell us about it.", f"{type(error).__name__}: {error}", trace)
         code = 1
     if pause:
         click.pause("\nPress any key to close this window.")

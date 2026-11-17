@@ -6,6 +6,11 @@ Versions follow [semantic versioning](https://semver.org). Each version's sectio
 
 - Installing again over an exe whose loading screen patch has its code section's size rounded up, as an early test
   version had, no longer takes the patched exe for the game's original and backs it up over the real one.
+- When the program can't go on, it shows a link that starts a GitHub issue with the details already filled in: the
+  error, the mod's version, the system, your screens, and the game's folder and exe, enough to tell one build of the
+  game from another. Your user name is cut out of the paths, and nothing is sent until you submit the issue. An
+  unexpected error, a bug in the mod, now shows it too, and on Windows the window stays open instead of closing at
+  once ([#18](https://github.com/bruno-gelb/mghd_resolution_mod/issues/18)).
 
 ## 0.3.0 (2026-11-15)
 
