@@ -2,7 +2,7 @@
 
 Versions follow [semantic versioning](https://semver.org). Each version's section here becomes its release notes.
 
-## Unreleased
+## 0.4.0 (2026-11-17)
 
 - Installing again over an exe whose loading screen patch has its code section's size rounded up, as an early test
   version had, no longer takes the patched exe for the game's original and backs it up over the real one.
