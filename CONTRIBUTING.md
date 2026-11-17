@@ -24,6 +24,7 @@ What it takes so far:
 
 The code is in `src/mghd_resolution_mod/`: `layouts.py` generates the layouts, `textdata.py` handles the text
 archives and the main menu label, `install.py` installs and uninstalls with backups, `cli.py` is the program.
+When it fails, `report.py` gives it a link to a new GitHub issue with the details filled in.
 
 All the details, with offsets and addresses: [docs/findings.md](docs/findings.md).
 
